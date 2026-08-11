@@ -53,6 +53,7 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
                 <TextBlock Text="Enable Notch" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,0"/>
@@ -67,14 +68,17 @@
                 <TextBlock Text="Corner Radius" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,0"/>
                 <Slider Grid.Row="3" Grid.Column="1" Minimum="0" Maximum="50" Value="{Binding ViewModel.Island.CornerRadius}" Margin="0,4" />
 
-                <TextBlock Text="Shadow Blur" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,0"/>
-                <Slider Grid.Row="4" Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding ViewModel.Island.ShadowBlurRadius}" Margin="0,4" />
+                <TextBlock Text="Anim Speed (ms)" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                <Slider Grid.Row="4" Grid.Column="1" Minimum="100" Maximum="2000" Value="{Binding ViewModel.Island.AnimationSpeedMs}" Margin="0,4" />
 
-                <TextBlock Text="Shadow Opacity" Grid.Row="5" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,0"/>
-                <Slider Grid.Row="5" Grid.Column="1" Minimum="0" Maximum="1" Value="{Binding ViewModel.Island.ShadowOpacity}" SmallChange="0.1" LargeChange="0.2" TickFrequency="0.1" Margin="0,4" />
+                <TextBlock Text="Shadow Blur" Grid.Row="5" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                <Slider Grid.Row="5" Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding ViewModel.Island.ShadowBlurRadius}" Margin="0,4" />
 
-                <TextBlock Text="Notch Color" Grid.Row="6" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,0"/>
-                <Grid Grid.Row="6" Grid.Column="1" Margin="0,4">
+                <TextBlock Text="Shadow Opacity" Grid.Row="6" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                <Slider Grid.Row="6" Grid.Column="1" Minimum="0" Maximum="1" Value="{Binding ViewModel.Island.ShadowOpacity}" SmallChange="0.1" LargeChange="0.2" TickFrequency="0.1" Margin="0,4" />
+
+                <TextBlock Text="Notch Color" Grid.Row="7" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                <Grid Grid.Row="7" Grid.Column="1" Margin="0,4">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
@@ -83,8 +87,8 @@
                     <ui:Button Grid.Column="1" Content="Pick" Click="PickNotchColor_Click" Margin="4,0,0,0" />
                 </Grid>
 
-                <TextBlock Text="Shadow Color" Grid.Row="7" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,0"/>
-                <Grid Grid.Row="7" Grid.Column="1" Margin="0,4">
+                <TextBlock Text="Shadow Color" Grid.Row="8" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                <Grid Grid.Row="8" Grid.Column="1" Margin="0,4">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />

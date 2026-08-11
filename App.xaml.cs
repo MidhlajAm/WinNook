@@ -33,10 +33,12 @@ namespace Project_Nook
 
             // Services
             services.AddSingleton<IConfigurationService, ConfigurationService>();
-
-            // ViewModels
+            services.AddSingleton<IStorageService, StorageService>();
+            services.AddSingleton<IShelfService, ShelfService>();
+            
+            services.AddSingleton<ControlCenterViewModel>();
             services.AddSingleton<IslandViewModel>();
-            services.AddTransient<ControlCenterViewModel>();
+            services.AddSingleton<ShelfViewModel>();
 
             // Windows
             services.AddTransient<MainWindow>();

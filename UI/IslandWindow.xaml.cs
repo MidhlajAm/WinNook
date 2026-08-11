@@ -5,6 +5,7 @@ using System;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
+using System.Threading.Tasks;
 
 namespace Project_Nook.UI
 {
@@ -49,11 +50,16 @@ namespace Project_Nook.UI
 
         private void AnimateState(IslandState state)
         {
+            ShelfView.Visibility = state == IslandState.Expanded ? Visibility.Visible : Visibility.Collapsed;
+            StateText.Visibility = state == IslandState.Expanded ? Visibility.Collapsed : Visibility.Visible;
+
             double targetWidth = state switch
             {
                 IslandState.Idle => ViewModel.IdleWidth,
                 IslandState.Hover => ViewModel.IdleWidth + 20,
-                IslandState.Expanded => ViewModel.IdleWidth + 100,
+                IslandState.Expanded => 400,
+                IslandState.DropTarget => ViewModel.IdleWidth + 40,
+                IslandState.Success => ViewModel.IdleWidth + 60,
                 _ => ViewModel.IdleWidth
             };
             
@@ -61,16 +67,25 @@ namespace Project_Nook.UI
             {
                 IslandState.Idle => ViewModel.IdleHeight,
                 IslandState.Hover => ViewModel.IdleHeight + 10,
-                IslandState.Expanded => ViewModel.IdleHeight + 110,
+                IslandState.Expanded => 300,
+                IslandState.DropTarget => ViewModel.IdleHeight + 20,
+                IslandState.Success => ViewModel.IdleHeight + 30,
                 _ => ViewModel.IdleHeight
             };
 
-            StateText.Text = state == IslandState.Expanded ? "🎵 Song Name  ◀ ❚❚ ▶" : "11:50 🔋";
-
             var ease = new ElasticEase { EasingMode = EasingMode.EaseOut, Oscillations = 1, Springiness = 4 };
+            if (state == IslandState.Success)
+            {
+                ease = new ElasticEase { EasingMode = EasingMode.EaseOut, Oscillations = 2, Springiness = 3 };
+                
+                Task.Delay(ViewModel.AnimationSpeedMs).ContinueWith(_ => Dispatcher.Invoke(() => 
+                {
+                    if (ViewModel.CurrentState == IslandState.Success) ViewModel.CurrentState = IslandState.Idle;
+                }));
+            }
 
-            var widthAnim = new DoubleAnimation { To = targetWidth, Duration = TimeSpan.FromMilliseconds(500), EasingFunction = ease };
-            var heightAnim = new DoubleAnimation { To = targetHeight, Duration = TimeSpan.FromMilliseconds(500), EasingFunction = ease };
+            var widthAnim = new DoubleAnimation { To = targetWidth, Duration = TimeSpan.FromMilliseconds(ViewModel.AnimationSpeedMs), EasingFunction = ease };
+            var heightAnim = new DoubleAnimation { To = targetHeight, Duration = TimeSpan.FromMilliseconds(ViewModel.AnimationSpeedMs), EasingFunction = ease };
 
             NotchBorder.BeginAnimation(FrameworkElement.WidthProperty, widthAnim);
             NotchBorder.BeginAnimation(FrameworkElement.HeightProperty, heightAnim);
@@ -82,6 +97,55 @@ namespace Project_Nook.UI
         {
             if (ViewModel.CurrentState == IslandState.Expanded) ViewModel.CollapseCommand.Execute(null);
             else ViewModel.ExpandCommand.Execute(null);
+        }
+
+        private void NotchBorder_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop) || e.Data.GetDataPresent(DataFormats.Text))
+            {
+                e.Effects = DragDropEffects.Copy;
+                ViewModel.CurrentState = IslandState.DropTarget;
+            }
+            else
+            {
+                e.Effects = DragDropEffects.None;
+            }
+            e.Handled = true;
+        }
+
+        private void NotchBorder_DragLeave(object sender, DragEventArgs e)
+        {
+            if (ViewModel.CurrentState == IslandState.DropTarget)
+            {
+                ViewModel.CurrentState = IslandState.Idle;
+            }
+            e.Handled = true;
+        }
+
+        private async void NotchBorder_Drop(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                var files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                ViewModel.CurrentState = IslandState.Success;
+                var shelfVm = App.Current.Services.GetRequiredService<ShelfViewModel>();
+                foreach (var file in files)
+                {
+                    await shelfVm.AddDroppedFileAsync(file);
+                }
+            }
+            else if (e.Data.GetDataPresent(DataFormats.Text))
+            {
+                var text = (string)e.Data.GetData(DataFormats.Text);
+                ViewModel.CurrentState = IslandState.Success;
+                var shelfVm = App.Current.Services.GetRequiredService<ShelfViewModel>();
+                await shelfVm.AddDroppedTextAsync(text);
+            }
+            else
+            {
+                ViewModel.CurrentState = IslandState.Idle;
+            }
+            e.Handled = true;
         }
     }
 }

@@ -44,6 +44,10 @@ namespace Project_Nook.ViewModels
         private double _idleHeight;
         partial void OnIdleHeightChanged(double value) => _config.SetSetting("IdleHeight", value.ToString());
 
+        [ObservableProperty]
+        private int _animationSpeedMs;
+        partial void OnAnimationSpeedMsChanged(int value) => _config.SetSetting("AnimationSpeedMs", value.ToString());
+
         public IslandViewModel(IConfigurationService config)
         {
             _config = config;
@@ -57,6 +61,7 @@ namespace Project_Nook.ViewModels
             if (double.TryParse(_config.GetSetting("CornerRadius"), out var cRadius)) CornerRadius = cRadius; else CornerRadius = 24.0;
             if (double.TryParse(_config.GetSetting("IdleWidth"), out var iWidth)) IdleWidth = iWidth; else IdleWidth = 200.0;
             if (double.TryParse(_config.GetSetting("IdleHeight"), out var iHeight)) IdleHeight = iHeight; else IdleHeight = 40.0;
+            if (int.TryParse(_config.GetSetting("AnimationSpeedMs"), out var asm)) AnimationSpeedMs = asm; else AnimationSpeedMs = 500;
         }
 
         [RelayCommand]
@@ -96,6 +101,7 @@ namespace Project_Nook.ViewModels
             CornerRadius = 24.0;
             IdleWidth = 200.0;
             IdleHeight = 40.0;
+            AnimationSpeedMs = 500;
         }
     }
 }

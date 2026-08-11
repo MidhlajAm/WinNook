@@ -4,6 +4,8 @@ namespace Project_Nook.Models
     {
         Idle,
         Hover,
-        Expanded
+        Expanded,
+        DropTarget,
+        Success
     }
 }

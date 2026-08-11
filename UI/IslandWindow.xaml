@@ -4,6 +4,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:Project_Nook.UI"
+    xmlns:local_ui="clr-namespace:Project_Nook.UI"
     Title="WinNook Island"
     AllowsTransparency="True"
     WindowStyle="None"
@@ -31,13 +32,23 @@
             CornerRadius="{Binding ViewModel.CornerRadius, Converter={StaticResource RadiusConverter}, Mode=OneWay}"
             MouseEnter="NotchBorder_MouseEnter"
             MouseLeave="NotchBorder_MouseLeave"
-            MouseLeftButtonDown="NotchBorder_MouseLeftButtonDown">
+            MouseLeftButtonDown="NotchBorder_MouseLeftButtonDown"
+            AllowDrop="True"
+            DragEnter="NotchBorder_DragEnter"
+            DragLeave="NotchBorder_DragLeave"
+            Drop="NotchBorder_Drop">
         <Border.Effect>
             <DropShadowEffect BlurRadius="{Binding ViewModel.ShadowBlurRadius, Mode=OneWay}" 
                               ShadowDepth="5" 
                               Opacity="{Binding ViewModel.ShadowOpacity, Mode=OneWay}" 
                               Color="{Binding ViewModel.ShadowColor, Converter={StaticResource ColorConverter}, Mode=OneWay}" />
         </Border.Effect>
-        <TextBlock x:Name="StateText" Text="11:50 🔋" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+        <Grid>
+            <!-- Idle/Hover Content -->
+            <TextBlock x:Name="StateText" Text="11:50 🔋" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,10,0,0" />
+            
+            <!-- Shelf Content (Visible when expanded) -->
+            <local_ui:ShelfControl x:Name="ShelfView" Visibility="Collapsed" Margin="0,40,0,0" />
+        </Grid>
     </Border>
 </Window>
