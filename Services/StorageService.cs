@@ -24,7 +24,16 @@ namespace Project_Nook.Services
             if (!File.Exists(sourcePath)) return null;
             
             var fileName = Path.GetFileName(sourcePath);
-            var destPath = Path.Combine(_storageDir, $"{Guid.NewGuid()}_{fileName}");
+            var destPath = Path.Combine(_storageDir, fileName);
+            
+            int counter = 1;
+            while (File.Exists(destPath))
+            {
+                string nameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
+                string ext = Path.GetExtension(fileName);
+                destPath = Path.Combine(_storageDir, $"{nameWithoutExt}_{counter}{ext}");
+                counter++;
+            }
             
             await Task.Run(() => File.Copy(sourcePath, destPath));
             

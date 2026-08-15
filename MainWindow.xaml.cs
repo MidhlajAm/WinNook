@@ -16,12 +16,30 @@ namespace Project_Nook
             InitializeComponent();
         }
 
+        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+        {
+            e.Cancel = true;
+            this.Hide();
+            base.OnClosing(e);
+        }
+
         private void PickNotchColor_Click(object sender, RoutedEventArgs e)
         {
             using var dialog = new System.Windows.Forms.ColorDialog();
             if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                ViewModel.Island.NotchColor = $"#{dialog.Color.R:X2}{dialog.Color.G:X2}{dialog.Color.B:X2}";
+                var color = dialog.Color;
+                ViewModel.Island.NotchColor = $"#{color.A:X2}{color.R:X2}{color.G:X2}{color.B:X2}";
+            }
+        }
+
+        private void PickHoverNotchColor_Click(object sender, RoutedEventArgs e)
+        {
+            using var dialog = new System.Windows.Forms.ColorDialog();
+            if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                var color = dialog.Color;
+                ViewModel.Island.HoverNotchColor = $"#{color.A:X2}{color.R:X2}{color.G:X2}{color.B:X2}";
             }
         }
 
@@ -30,8 +48,52 @@ namespace Project_Nook
             using var dialog = new System.Windows.Forms.ColorDialog();
             if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                ViewModel.Island.ShadowColor = $"#{dialog.Color.R:X2}{dialog.Color.G:X2}{dialog.Color.B:X2}";
+                var color = dialog.Color;
+                ViewModel.Island.ShadowColor = $"#{color.A:X2}{color.R:X2}{color.G:X2}{color.B:X2}";
             }
+        }
+
+        private void PickHoverShadowColor_Click(object sender, RoutedEventArgs e)
+        {
+            using var dialog = new System.Windows.Forms.ColorDialog();
+            if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                var color = dialog.Color;
+                ViewModel.Island.HoverShadowColor = $"#{color.A:X2}{color.R:X2}{color.G:X2}{color.B:X2}";
+            }
+        }
+
+        private void LinkedIn_Click(object sender, RoutedEventArgs e)
+        {
+            OpenUrl("https://www.linkedin.com/in/midhlaj-am/");
+        }
+
+        private void GitHub_Click(object sender, RoutedEventArgs e)
+        {
+            OpenUrl("https://github.com/MidhlajAm");
+        }
+
+        private void OpenKofi_Click(object sender, RoutedEventArgs e)
+        {
+            OpenUrl("https://ko-fi.com/T8Q124XOE1");
+        }
+
+        private void OpenUrl(string url)
+        {
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = url,
+                    UseShellExecute = true
+                });
+            }
+            catch { }
+        }
+
+        private void TabControl_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+
         }
     }
 }

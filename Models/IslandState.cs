@@ -6,6 +6,7 @@ namespace Project_Nook.Models
         Hover,
         Expanded,
         DropTarget,
-        Success
+        Success,
+        Triggered
     }
 }

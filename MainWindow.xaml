@@ -131,7 +131,7 @@
 
                         <Grid Margin="0,0,0,16">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="120" />
+                                <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="Inverted Curves" VerticalAlignment="Center" Foreground="White" />
@@ -140,7 +140,7 @@
 
                         <Grid Margin="0,0,0,24">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="120" />
+                                <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="30" />
                             </Grid.ColumnDefinitions>
@@ -153,7 +153,7 @@
 
                         <Grid Margin="0,0,0,16">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="120" />
+                                <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="30" />
                             </Grid.ColumnDefinitions>
@@ -164,7 +164,7 @@
 
                         <Grid Margin="0,0,0,16">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="120" />
+                                <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="30" />
                             </Grid.ColumnDefinitions>
@@ -175,7 +175,7 @@
 
                         <Grid Margin="0,0,0,16">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="120" />
+                                <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="30" />
                             </Grid.ColumnDefinitions>
@@ -187,7 +187,7 @@
 
                         <Grid Margin="0,0,0,16">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="120" />
+                                <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
@@ -200,7 +200,7 @@
 
                         <Grid Margin="0,0,0,16">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="120" />
+                                <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="30" />
                             </Grid.ColumnDefinitions>
@@ -211,7 +211,7 @@
 
                         <Grid Margin="0,0,0,16">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="120" />
+                                <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="30" />
                             </Grid.ColumnDefinitions>
@@ -222,7 +222,7 @@
 
                         <Grid Margin="0,0,0,16">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="120" />
+                                <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="30" />
                             </Grid.ColumnDefinitions>
@@ -233,7 +233,7 @@
 
                         <Grid Margin="0,0,0,16">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="120" />
+                                <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="30" />
                             </Grid.ColumnDefinitions>
@@ -244,7 +244,7 @@
 
                         <Grid Margin="0,0,0,16">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="120" />
+                                <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
@@ -264,7 +264,7 @@
 
                         <Grid Margin="0,0,0,16">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="120" />
+                                <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="Anim Speed (ms)" VerticalAlignment="Center" Foreground="White" />
@@ -273,7 +273,7 @@
 
                         <Grid Margin="0,0,0,16">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="120" />
+                                <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="Shadow Blur" VerticalAlignment="Center" Foreground="White" />
@@ -282,7 +282,7 @@
 
                         <Grid Margin="0,0,0,16">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="120" />
+                                <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="Shadow Opacity" VerticalAlignment="Center" Foreground="White" />
@@ -291,7 +291,7 @@
 
                         <Grid Margin="0,0,0,16">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="120" />
+                                <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
@@ -302,7 +302,7 @@
 
                         <Grid Margin="0,0,0,16">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="120" />
+                                <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
@@ -318,6 +318,22 @@
             <TabItem>
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0">
                     <StackPanel HorizontalAlignment="Center" Width="400">
+                        <TextBlock Text="Widget Settings" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,24" HorizontalAlignment="Center" Foreground="White"/>
+                        
+                        <Border Background="#1AFFFFFF" CornerRadius="8" Padding="16" Margin="0,0,0,32" HorizontalAlignment="Stretch">
+                            <Grid HorizontalAlignment="Stretch">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,0">
+                                    <TextBlock Text="Music Widget" FontSize="16" FontWeight="SemiBold" Foreground="White" />
+                                    <TextBlock Text="Show media playback and controls in the Notch." Foreground="#888" Margin="0,4,0,0" TextWrapping="Wrap" />
+                                </StackPanel>
+                                <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding ViewModel.IsMusicWidgetEnabled}" VerticalAlignment="Center" />
+                            </Grid>
+                        </Border>
+
                         <TextBlock Text="Live Preview Control" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,24" HorizontalAlignment="Center" Foreground="White"/>
                         <TextBlock Text="Manually test the states of the Notch without triggering system events." TextWrapping="Wrap" Margin="0,0,0,24" HorizontalAlignment="Center" TextAlignment="Center" Foreground="White" />
                         

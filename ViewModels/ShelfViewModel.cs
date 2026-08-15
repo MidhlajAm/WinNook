@@ -14,6 +14,14 @@ namespace Project_Nook.ViewModels
 
         public ObservableCollection<ShelfItem> Items { get; } = new();
 
+        public System.Action CloseShelfAction { get; set; }
+
+        [RelayCommand]
+        private void CloseShelf()
+        {
+            CloseShelfAction?.Invoke();
+        }
+
         public ShelfViewModel(IShelfService shelfService, IStorageService storageService)
         {
             _shelfService = shelfService;
@@ -69,13 +77,30 @@ namespace Project_Nook.ViewModels
 
         public async Task AddDroppedFileAsync(string filePath)
         {
+            if (!System.IO.File.Exists(filePath)) return;
+
+            var fileInfo = new System.IO.FileInfo(filePath);
+            
+            // Prevent duplicates: Check if we already have a file with the same name and size
+            foreach (var existingItem in Items)
+            {
+                if (existingItem.OriginalName == fileInfo.Name && !string.IsNullOrEmpty(existingItem.StoredPath) && System.IO.File.Exists(existingItem.StoredPath))
+                {
+                    var storedInfo = new System.IO.FileInfo(existingItem.StoredPath);
+                    if (storedInfo.Length == fileInfo.Length)
+                    {
+                        return; // It's the same file, ignore the drop
+                    }
+                }
+            }
+
             var storedPath = await _storageService.CopyFileToStorageAsync(filePath);
             if (storedPath != null)
             {
                 var item = new ShelfItem
                 {
-                    Type = "File",
-                    OriginalName = System.IO.Path.GetFileName(filePath),
+                    Type = DetermineFileType(fileInfo.Name),
+                    OriginalName = fileInfo.Name,
                     StoredPath = storedPath,
                     CreatedAt = System.DateTime.Now
                 };
@@ -86,6 +111,15 @@ namespace Project_Nook.ViewModels
 
         public async Task AddDroppedTextAsync(string text)
         {
+            // Prevent duplicates for exact same text
+            foreach (var existingItem in Items)
+            {
+                if (existingItem.Type == "Text" && existingItem.Content == text)
+                {
+                    return;
+                }
+            }
+
             var storedPath = await _storageService.SaveTextToStorageAsync(text, "TextSnippet");
             var item = new ShelfItem
             {
@@ -97,6 +131,21 @@ namespace Project_Nook.ViewModels
             };
             await _shelfService.SaveItemAsync(item);
             System.Windows.Application.Current.Dispatcher.Invoke(() => Items.Insert(0, item));
+        }
+
+        private string DetermineFileType(string fileName)
+        {
+            string ext = System.IO.Path.GetExtension(fileName).ToLowerInvariant();
+            return ext switch
+            {
+                ".png" or ".jpg" or ".jpeg" or ".gif" or ".bmp" or ".webp" or ".ico" => "Image",
+                ".mp4" or ".mkv" or ".avi" or ".mov" or ".webm" => "Video",
+                ".mp3" or ".wav" or ".flac" or ".ogg" or ".m4a" => "Audio",
+                ".txt" or ".md" or ".rtf" or ".json" or ".xml" or ".csv" or ".log" => "Text",
+                ".zip" or ".rar" or ".7z" or ".tar" or ".gz" => "Archive",
+                ".cs" or ".js" or ".html" or ".css" or ".py" or ".cpp" or ".c" => "Code",
+                _ => "File"
+            };
         }
     }
 }

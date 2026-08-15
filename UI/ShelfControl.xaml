@@ -2,19 +2,39 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:converters="clr-namespace:Project_Nook.Converters"
              Foreground="White">
+    <UserControl.Resources>
+        <converters:TypeToIconConverter x:Key="TypeToIconConverter" />
+    </UserControl.Resources>
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         
-        <TextBlock Text="My Shelf" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,16" />
+        <Grid Margin="0,0,0,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            
+            <ui:Button Grid.Column="0" Appearance="Transparent" Command="{Binding CloseShelfCommand}" Margin="0,0,12,0" Padding="4">
+                <ui:SymbolIcon Symbol="ChevronLeft24" FontSize="20" Foreground="White" />
+            </ui:Button>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <ui:SymbolIcon Symbol="Library24" FontSize="20" Margin="0,0,8,0" />
+                <TextBlock Text="Shelf" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" />
+            </StackPanel>
+        </Grid>
         
         <ListBox Grid.Row="1" ItemsSource="{Binding Items}" Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <Border Background="#1AFFFFFF" CornerRadius="8" Margin="0,4" Padding="8">
+                    <Border Background="#1AFFFFFF" CornerRadius="8" Margin="0,4" Padding="8"
+                            MouseMove="Border_MouseMove" MouseLeftButtonDown="Border_MouseLeftButtonDown"
+                            Cursor="Hand">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
@@ -23,7 +43,7 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             
-                            <ui:SymbolIcon Symbol="Document24" FontSize="24" Margin="0,0,12,0" />
+                            <ui:SymbolIcon Symbol="{Binding Type, Converter={StaticResource TypeToIconConverter}}" FontSize="24" Margin="0,0,12,0" />
                             
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                 <TextBlock Text="{Binding OriginalName}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />

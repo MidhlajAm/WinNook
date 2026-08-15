@@ -28,6 +28,14 @@ namespace Project_Nook.ViewModels
         private bool _isHidden;
 
         [ObservableProperty]
+        private bool _isShelfVisible;
+
+        public WidgetDashboardViewModel DashboardViewModel { get; } = new();
+
+        [ObservableProperty]
+        private bool _isMusicWidgetEnabled;
+
+        [ObservableProperty]
         private bool _enableFillets;
         partial void OnEnableFilletsChanged(bool value) { if (!_isInitializing) _config.SetSetting("EnableFillets", value.ToString()); }
 
@@ -91,10 +99,13 @@ namespace Project_Nook.ViewModels
         private int _animationSpeedMs;
         partial void OnAnimationSpeedMsChanged(int value) { if (!_isInitializing) _config.SetSetting("AnimationSpeedMs", value.ToString(System.Globalization.CultureInfo.InvariantCulture)); }
 
-        public IslandViewModel(IConfigurationService config)
+        public MusicWidgetViewModel MusicWidget { get; }
+
+        public IslandViewModel(IConfigurationService config, ShelfViewModel shelfVm, MusicWidgetViewModel musicWidget)
         {
             _isInitializing = true;
             _config = config;
+            MusicWidget = musicWidget;
             
             var nColor = _config.GetSetting("NotchColor");
             NotchColor = string.IsNullOrEmpty(nColor) ? "#000000" : nColor;
@@ -115,6 +126,7 @@ namespace Project_Nook.ViewModels
             
             var culture = System.Globalization.CultureInfo.InvariantCulture;
             if (bool.TryParse(_config.GetSetting("IsIslandEnabled"), out var isEnabled)) IsIslandEnabled = isEnabled; else IsIslandEnabled = true;
+            IsMusicWidgetEnabled = _config.IsMusicWidgetEnabled;
             if (bool.TryParse(_config.GetSetting("EnableFillets"), out var eFillets)) EnableFillets = eFillets; else EnableFillets = true;
             if (double.TryParse(_config.GetSetting("ShadowOpacity"), System.Globalization.NumberStyles.Any, culture, out var sOpacity)) ShadowOpacity = sOpacity; else ShadowOpacity = 0.5;
             if (double.TryParse(_config.GetSetting("ShadowBlurRadius"), System.Globalization.NumberStyles.Any, culture, out var sBlur)) ShadowBlurRadius = sBlur; else ShadowBlurRadius = 20.0;
@@ -128,6 +140,16 @@ namespace Project_Nook.ViewModels
             if (double.TryParse(_config.GetSetting("FilletRadius"), System.Globalization.NumberStyles.Any, culture, out var fRadius)) FilletRadius = fRadius; else FilletRadius = 16.0;
             if (int.TryParse(_config.GetSetting("AnimationSpeedMs"), System.Globalization.NumberStyles.Any, culture, out var asm)) AnimationSpeedMs = asm; else AnimationSpeedMs = 500;
             
+            DashboardViewModel.OpenShelfAction = () => IsShelfVisible = true;
+            DashboardViewModel.OpenControlCenterAction = () =>
+            {
+                var app = (App)System.Windows.Application.Current;
+                app.ShowControlCenter();
+                Collapse();
+            };
+            
+            shelfVm.CloseShelfAction = () => IsShelfVisible = false;
+
             _isInitializing = false;
         }
 

@@ -5,6 +5,9 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:Project_Nook.UI"
     xmlns:local_ui="clr-namespace:Project_Nook.UI"
+    xmlns:widgets="clr-namespace:Project_Nook.UI.Widgets"
+    xmlns:controls="clr-namespace:Project_Nook.UI.Controls"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     Title="WinNook Island"
     AllowsTransparency="True"
     WindowStyle="None"
@@ -19,36 +22,160 @@
         <local_conv:DoubleToBottomCornerRadiusConverter x:Key="RadiusConverter" xmlns:local_conv="clr-namespace:Project_Nook.Converters"/>
         <local_conv:StringToBrushConverter x:Key="BrushConverter" xmlns:local_conv="clr-namespace:Project_Nook.Converters"/>
         <local_conv:StringToColorConverter x:Key="ColorConverter" xmlns:local_conv="clr-namespace:Project_Nook.Converters"/>
+        <local_conv:FilletRadiusToPathConverter x:Key="FilletPathConverter" xmlns:local_conv="clr-namespace:Project_Nook.Converters"/>
+        <local_conv:FilletRadiusToMarginConverter x:Key="FilletMarginConverter" xmlns:local_conv="clr-namespace:Project_Nook.Converters"/>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
     </Window.Resources>
 
-    <Border x:Name="NotchBorder"
-            Visibility="{Binding ViewModel.IsIslandEnabled, Converter={StaticResource BoolToVis}}"
-            Background="{Binding ViewModel.NotchColor, Converter={StaticResource BrushConverter}, Mode=OneWay}"
-            VerticalAlignment="Top"
-            HorizontalAlignment="Center"
-            Width="{Binding ViewModel.IdleWidth, Mode=OneWay}"
-            Height="{Binding ViewModel.IdleHeight, Mode=OneWay}"
-            CornerRadius="{Binding ViewModel.CornerRadius, Converter={StaticResource RadiusConverter}, Mode=OneWay}"
-            MouseEnter="NotchBorder_MouseEnter"
-            MouseLeave="NotchBorder_MouseLeave"
-            MouseLeftButtonDown="NotchBorder_MouseLeftButtonDown"
-            AllowDrop="True"
-            DragEnter="NotchBorder_DragEnter"
-            DragLeave="NotchBorder_DragLeave"
-            Drop="NotchBorder_Drop">
-        <Border.Effect>
-            <DropShadowEffect BlurRadius="{Binding ViewModel.ShadowBlurRadius, Mode=OneWay}" 
-                              ShadowDepth="5" 
-                              Opacity="{Binding ViewModel.ShadowOpacity, Mode=OneWay}" 
-                              Color="{Binding ViewModel.ShadowColor, Converter={StaticResource ColorConverter}, Mode=OneWay}" />
-        </Border.Effect>
-        <Grid>
-            <!-- Idle/Hover Content -->
-            <TextBlock x:Name="StateText" Text="11:50 🔋" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,10,0,0" />
-            
-            <!-- Shelf Content (Visible when expanded) -->
-            <local_ui:ShelfControl x:Name="ShelfView" Visibility="Collapsed" Margin="0,40,0,0" />
-        </Grid>
-    </Border>
+    <Grid HorizontalAlignment="Center" VerticalAlignment="Top">
+        <Grid.Style>
+            <Style TargetType="Grid">
+                <Setter Property="Visibility" Value="Visible" />
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding ViewModel.IsHidden}" Value="True">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding ViewModel.IsIslandEnabled}" Value="False">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </Grid.Style>
+        <Border x:Name="NotchBorder"
+                VerticalAlignment="Top"
+                HorizontalAlignment="Center"
+                Width="{Binding ViewModel.IdleWidth, Mode=OneWay}"
+                Height="{Binding ViewModel.IdleHeight, Mode=OneWay}"
+                MouseEnter="NotchBorder_MouseEnter"
+                MouseLeave="NotchBorder_MouseLeave"
+                MouseLeftButtonDown="NotchBorder_MouseLeftButtonDown"
+                AllowDrop="True"
+                DragEnter="NotchBorder_DragEnter"
+                DragLeave="NotchBorder_DragLeave"
+                Drop="NotchBorder_Drop">
+            <Border.Background>
+                <SolidColorBrush x:Name="NotchBackground" Color="{Binding ViewModel.NotchColor, Converter={StaticResource ColorConverter}, Mode=OneWay}" />
+            </Border.Background>
+            <Border.Effect>
+                <DropShadowEffect x:Name="NotchShadow" BlurRadius="{Binding ViewModel.ShadowBlurRadius, Mode=OneWay}" 
+                                  ShadowDepth="5" 
+                                  Opacity="{Binding ViewModel.ShadowOpacity, Mode=OneWay}" 
+                                  Color="{Binding ViewModel.ShadowColor, Converter={StaticResource ColorConverter}, Mode=OneWay}" />
+            </Border.Effect>
+            <Grid>
+                <!-- Idle/Hover Content -->
+                <Grid x:Name="IdleContentGrid" Margin="12,0" VerticalAlignment="Center">
+                    <!-- Text Layout (Default) -->
+                    <StackPanel x:Name="StateTextContainer" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Visible" />
+                                <Style.Triggers>
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding ViewModel.MusicWidget.IsPlaying}" Value="True" />
+                                            <Condition Binding="{Binding ViewModel.IsMusicWidgetEnabled}" Value="True" />
+                                        </MultiDataTrigger.Conditions>
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </MultiDataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <ui:SymbolIcon Foreground="White" Margin="0,0,8,0">
+                            <ui:SymbolIcon.Style>
+                                <Style TargetType="ui:SymbolIcon">
+                                    <Setter Property="Symbol" Value="{Binding ViewModel.TriggerIcon}" />
+                                    <Setter Property="Visibility" Value="Visible" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ViewModel.TriggerIcon}" Value="Empty">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ui:SymbolIcon.Style>
+                        </ui:SymbolIcon>
+                        <TextBlock Text="{Binding ViewModel.TriggerText}" Foreground="White" VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <!-- Media Layout -->
+                    <Grid x:Name="MediaLayout">
+                        <Grid.Style>
+                            <Style TargetType="Grid">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding ViewModel.MusicWidget.IsPlaying}" Value="True" />
+                                            <Condition Binding="{Binding ViewModel.IsMusicWidgetEnabled}" Value="True" />
+                                        </MultiDataTrigger.Conditions>
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </MultiDataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Grid.Style>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        
+                        <!-- Album Art -->
+                        <Border Grid.Column="0" Width="24" Height="24" CornerRadius="8" VerticalAlignment="Center" HorizontalAlignment="Left">
+                            <Border.Background>
+                                <ImageBrush ImageSource="{Binding ViewModel.MusicWidget.AlbumArt}" Stretch="UniformToFill" />
+                            </Border.Background>
+                        </Border>
+                        
+                        <!-- Spectrograph -->
+                        <controls:SpectrographControl Grid.Column="2" IsPlaying="{Binding ViewModel.MusicWidget.IsPlaying}" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                    </Grid>
+                </Grid>
+                
+                <!-- Expanded Content (Dashboard or Shelf) -->
+                <Grid x:Name="ExpandedContentGrid" Visibility="Collapsed" Margin="0,16,0,0">
+                    <ContentControl x:Name="ShelfView">
+                        <ContentControl.Style>
+                            <Style TargetType="ContentControl">
+                                <Setter Property="Visibility" Value="Visible" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ViewModel.IsShelfVisible}" Value="False">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ContentControl.Style>
+                        <local_ui:ShelfControl />
+                    </ContentControl>
+
+                    <ContentControl x:Name="DashboardView" DataContext="{Binding ViewModel.DashboardViewModel}">
+                        <ContentControl.Style>
+                            <Style TargetType="ContentControl">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=DataContext.ViewModel.IsShelfVisible}" Value="False">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ContentControl.Style>
+                        <widgets:WidgetDashboardControl />
+                    </ContentControl>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <!-- Left Fillet -->
+        <Path Data="{Binding ViewModel.FilletRadius, Converter={StaticResource FilletPathConverter}, ConverterParameter=Left}"
+              Fill="{Binding Background, ElementName=NotchBorder}"
+              HorizontalAlignment="Left" VerticalAlignment="Top"
+              Margin="{Binding ViewModel.FilletRadius, Converter={StaticResource FilletMarginConverter}, ConverterParameter=Left}"
+              Visibility="{Binding ViewModel.EnableFillets, Converter={StaticResource BoolToVis}}" />
+              
+        <!-- Right Fillet -->
+        <Path Data="{Binding ViewModel.FilletRadius, Converter={StaticResource FilletPathConverter}, ConverterParameter=Right}"
+              Fill="{Binding Background, ElementName=NotchBorder}"
+              HorizontalAlignment="Right" VerticalAlignment="Top"
+              Margin="{Binding ViewModel.FilletRadius, Converter={StaticResource FilletMarginConverter}, ConverterParameter=Right}"
+              Visibility="{Binding ViewModel.EnableFillets, Converter={StaticResource BoolToVis}}" />
+    </Grid>
 </Window>
