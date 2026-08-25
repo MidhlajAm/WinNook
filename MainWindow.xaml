@@ -21,8 +21,8 @@
 
         <ui:TitleBar Title="WinNook Control Center" Grid.Row="0" Foreground="White" />
 
-        <Border Grid.Row="1" Background="#282C34" BorderBrush="#333" BorderThickness="0,0,0,1">
-            <Grid>
+        <Border Grid.Row="1" Background="#282C34" BorderBrush="#333" BorderThickness="0,0,0,1" ClipToBounds="False">
+            <Grid ClipToBounds="False">
                 <!-- The dock stays centred; the lockup sits in the margin it was already leaving empty. -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center"
                             Margin="24,0,0,0">
@@ -33,7 +33,15 @@
                     </TextBlock>
                 </StackPanel>
 
-                <ListBox x:Name="DockListBox" SelectedIndex="{Binding ViewModel.SelectedTabIndex}" HorizontalAlignment="Center" Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" ClipToBounds="False">
+                <ListBox x:Name="DockListBox" SelectedIndex="{Binding ViewModel.SelectedTabIndex}" HorizontalAlignment="Center" Background="Transparent" BorderThickness="0" ClipToBounds="False">
+                    <!-- Bare ItemsPresenter, no ScrollViewer: the default ListBox template scrolls, and a
+                         ScrollViewer clips its content whatever ClipToBounds says. The hover animation
+                         scales each item 1.2x upward from its bottom edge, so it needs to overflow. -->
+                    <ListBox.Template>
+                        <ControlTemplate TargetType="ListBox">
+                            <ItemsPresenter />
+                        </ControlTemplate>
+                    </ListBox.Template>
                 <ListBox.ItemsPanel>
                     <ItemsPanelTemplate>
                         <StackPanel Orientation="Horizontal" Background="Transparent" ClipToBounds="False" />
@@ -137,7 +145,7 @@
             <!-- APPEARANCE TAB (Index 1) -->
             <TabItem>
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0" Padding="0,0,16,0">
-                    <StackPanel HorizontalAlignment="Center" Width="560">
+                    <StackPanel HorizontalAlignment="Stretch" MaxWidth="560" Margin="0,0,4,0">
                         <Grid Margin="0,0,0,24">
                             <TextBlock Text="Notch Appearance" Style="{StaticResource SectionHeader}" />
                             <ui:Button Content="Reset Default" HorizontalAlignment="Right" VerticalAlignment="Center" Command="{Binding ViewModel.Island.RestoreDefaultsCommand}" />
@@ -149,19 +157,39 @@
                         <Border Style="{StaticResource SettingsCard}">
                             <StackPanel>
                                 <TextBlock Text="Notch Style" Style="{StaticResource SettingLabel}" />
-                                <TextBlock Text="A starting point for the sliders below. Nook sits flush against the screen edge; Dynamic Island floats free as a rounded pill."
+                                <TextBlock Text="Nook sits flush against the screen edge; Dynamic Island floats free as a rounded pill. Each style keeps its own settings, so switching never loses your tuning."
                                            Style="{StaticResource SettingDescription}" Margin="0,3,0,10" />
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <ui:Button Grid.Column="0" Content="Nook (default)" Margin="0,0,6,0"
+                                    <ui:Button Grid.Column="0" Content="Nook" Margin="0,0,6,0"
                                                HorizontalAlignment="Stretch"
-                                               Command="{Binding ViewModel.Island.ApplyNookStyleCommand}" />
+                                               Command="{Binding ViewModel.Island.ApplyNookStyleCommand}">
+                                        <ui:Button.Style>
+                                            <Style TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding ViewModel.Island.IsNookStyle}" Value="True">
+                                                        <Setter Property="Appearance" Value="Primary" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </ui:Button.Style>
+                                    </ui:Button>
                                     <ui:Button Grid.Column="1" Content="Dynamic Island" Margin="6,0,0,0"
                                                HorizontalAlignment="Stretch"
-                                               Command="{Binding ViewModel.Island.ApplyDynamicIslandStyleCommand}" />
+                                               Command="{Binding ViewModel.Island.ApplyDynamicIslandStyleCommand}">
+                                        <ui:Button.Style>
+                                            <Style TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding ViewModel.Island.IsDynamicIslandStyle}" Value="True">
+                                                        <Setter Property="Appearance" Value="Primary" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </ui:Button.Style>
+                                    </ui:Button>
                                 </Grid>
                             </StackPanel>
                         </Border>
@@ -194,7 +222,7 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="30" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="Fillet Radius" VerticalAlignment="Center" Foreground="White" />
                             <Slider Grid.Column="1" Minimum="0" Maximum="40" Value="{Binding ViewModel.Island.FilletRadius, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" />
@@ -207,7 +235,7 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="30" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="Width" VerticalAlignment="Center" Foreground="White" />
                             <Slider Grid.Column="1" Minimum="100" Maximum="500" Value="{Binding ViewModel.Island.IdleWidth, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" />
@@ -218,7 +246,7 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="30" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="Height" VerticalAlignment="Center" Foreground="White" />
                             <Slider Grid.Column="1" Minimum="20" Maximum="100" Value="{Binding ViewModel.Island.IdleHeight, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" />
@@ -229,7 +257,7 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="30" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="Corner Radius" VerticalAlignment="Center" Foreground="White" />
                             <Slider Grid.Column="1" Minimum="0" Maximum="50" Value="{Binding ViewModel.Island.CornerRadius, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" />
@@ -254,7 +282,7 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="30" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="Hover Width" VerticalAlignment="Center" Foreground="White" />
                             <Slider Grid.Column="1" Minimum="100" Maximum="600" Value="{Binding ViewModel.Island.HoverWidth, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" />
@@ -265,7 +293,7 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="30" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="Hover Height" VerticalAlignment="Center" Foreground="White" />
                             <Slider Grid.Column="1" Minimum="20" Maximum="200" Value="{Binding ViewModel.Island.HoverHeight, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" />
@@ -276,7 +304,7 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="30" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="Hover Corner Radius" VerticalAlignment="Center" Foreground="White" />
                             <Slider Grid.Column="1" Minimum="0" Maximum="50" Value="{Binding ViewModel.Island.HoverCornerRadius, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" />
@@ -289,7 +317,7 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="30" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="Expanded Width" VerticalAlignment="Center" Foreground="White" />
                             <Slider Grid.Column="1" Minimum="200" Maximum="1000" Value="{Binding ViewModel.Island.ExpandedWidth, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" />
@@ -300,7 +328,7 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="30" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="Expanded Height" VerticalAlignment="Center" Foreground="White" />
                             <Slider Grid.Column="1" Minimum="50" Maximum="500" Value="{Binding ViewModel.Island.ExpandedHeight, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" />
@@ -311,7 +339,7 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="30" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="Expanded Corner Rad." VerticalAlignment="Center" Foreground="White" />
                             <Slider Grid.Column="1" Minimum="0" Maximum="50" Value="{Binding ViewModel.Island.ExpandedCornerRadius, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" />
@@ -322,7 +350,7 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="30" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="Expanded Fillet Rad." VerticalAlignment="Center" Foreground="White" />
                             <Slider Grid.Column="1" Minimum="0" Maximum="40" Value="{Binding ViewModel.Island.ExpandedFilletRadius, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" />
@@ -346,7 +374,7 @@
             <!-- EFFECTS TAB (Index 2) -->
             <TabItem>
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0" Padding="0,0,16,0">
-                    <StackPanel HorizontalAlignment="Center" Width="560">
+                    <StackPanel HorizontalAlignment="Stretch" MaxWidth="560" Margin="0,0,4,0">
                         <TextBlock Text="Shadows &amp; Animation" Style="{StaticResource SectionHeader}" />
 
                         <Grid Margin="0,0,0,16">
@@ -421,7 +449,7 @@
             <!-- ACTIVITY TAB (Index 3) -->
             <TabItem>
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0" Padding="0,0,16,0">
-                    <StackPanel HorizontalAlignment="Center" Width="560">
+                    <StackPanel HorizontalAlignment="Stretch" MaxWidth="560" Margin="0,0,4,0">
                         <TextBlock Text="Widget Settings" Style="{StaticResource SectionHeader}" />
                         <TextBlock Text="Turn widgets on or off, and set the order they appear in the expanded Notch."
                                    Foreground="#888" TextWrapping="Wrap" TextAlignment="Center" Margin="0,0,0,24" />
@@ -481,7 +509,7 @@
             <!-- SHELF TAB (Index 4) -->
             <TabItem>
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0" Padding="0,0,16,0">
-                    <StackPanel HorizontalAlignment="Center" Width="560">
+                    <StackPanel HorizontalAlignment="Stretch" MaxWidth="560" Margin="0,0,4,0">
                         <TextBlock Text="Quick Launch" Style="{StaticResource SectionHeader}" />
                         <TextBlock Text="Pick the apps you want in the Notch. Turn on the Quick Launch widget in Activity to see them."
                                    Foreground="#888" TextWrapping="Wrap" TextAlignment="Center" Margin="0,0,0,16" />
@@ -723,8 +751,7 @@
                             </ScrollViewer>
                         </TabItem>
                         
-                        <!-- Danger Zone (Index 1) -->
-                        <!-- Dive In (Index 1) -->
+                        <!-- Dive In -->
                         <TabItem>
                             <Grid>
                                 <Grid.RowDefinitions>
@@ -739,12 +766,15 @@
                                                Style="{StaticResource SectionCaption}" />
                                 </StackPanel>
 
-                                    <Grid>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="*" />
-                                        </Grid.RowDefinitions>
-                                        
+                                <!-- Grid.Row is load-bearing here: without it this lands in row 0, which is
+                                     Auto-sized, and an Auto row hands its child unlimited height. The list
+                                     then grows to fit every app instead of scrolling. -->
+                                <Grid Grid.Row="1">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
+                                    
                                         <Grid Grid.Row="0" Margin="0,0,0,16">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*" />
@@ -823,7 +853,7 @@
             <!-- DEVELOPER TAB (Index 6) -->
             <TabItem>
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0" Padding="0,0,16,0">
-                    <StackPanel HorizontalAlignment="Center" Width="620">
+                    <StackPanel HorizontalAlignment="Stretch" MaxWidth="620" Margin="0,0,4,0">
                         <TextBlock Text="About the Developer" Style="{StaticResource SectionHeader}" />
                         
                         <Border Background="#21252B" CornerRadius="12" Padding="24" Margin="0,0,0,24" BorderBrush="#333" BorderThickness="1">

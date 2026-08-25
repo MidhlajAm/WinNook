@@ -5,7 +5,7 @@
 ;   dotnet publish "Project Nook.csproj" -c Release -r win-x64 --self-contained true -p:Platform=x64
 
 #define AppName        "WinNook"
-#define AppVersion     "1.0.0"
+#define AppVersion     "2.0.0"
 #define AppPublisher   "Midhlaj AM"
 #define AppURL         "https://github.com/MidhlajAm"
 #define AppExe         "WinNook.exe"

@@ -12,6 +12,13 @@ namespace Project_Nook.ViewModels
         private readonly WidgetRegistry _widgets;
         private bool _isInitializing = false;
 
+        /// <summary>
+        /// Set while a style preset writes its values. The expanded-dimension setters below deliberately
+        /// force the notch open so dragging one of those sliders previews the result live, but a preset
+        /// writes several of them at once and must not hijack the notch's state to do it.
+        /// </summary>
+        private bool _isApplyingPreset = false;
+
         [ObservableProperty]
         private IslandState _currentState = IslandState.Idle;
 
@@ -56,6 +63,19 @@ namespace Project_Nook.ViewModels
 
         partial void OnCurrentStateChanged(IslandState value)
         {
+            // A notification belongs to the Triggered state and must not outlive it. The trigger engine's
+            // collapse timer used to be the only thing that cleared the icon, and only if the state was
+            // still Triggered - so leaving Triggered any other way (a drop switching to Success, a click
+            // expanding, a hover) stranded the icon on the idle notch permanently.
+            //
+            // Trigger() sets the text and icon before setting the state, so arriving at Triggered here
+            // never wipes the notification it is about to show.
+            if (value != IslandState.Triggered)
+            {
+                NotificationText = string.Empty;
+                TriggerIcon = Wpf.Ui.Controls.SymbolRegular.Empty;
+            }
+
             OnPropertyChanged(nameof(DisplayText));
             UpdateDashboardActivation();
         }
@@ -133,15 +153,15 @@ namespace Project_Nook.ViewModels
 
         [ObservableProperty]
         private double _expandedCornerRadius;
-        partial void OnExpandedCornerRadiusChanged(double value) { if (!_isInitializing) { _config.SetSetting("ExpandedCornerRadius", value.ToString(System.Globalization.CultureInfo.InvariantCulture)); CurrentState = IslandState.Expanded; } }
+        partial void OnExpandedCornerRadiusChanged(double value) { if (!_isInitializing) { _config.SetSetting("ExpandedCornerRadius", value.ToString(System.Globalization.CultureInfo.InvariantCulture)); if (!_isApplyingPreset) CurrentState = IslandState.Expanded; } }
 
         [ObservableProperty]
         private double _expandedWidth;
-        partial void OnExpandedWidthChanged(double value) { if (!_isInitializing) { _config.SetSetting("ExpandedWidth", value.ToString(System.Globalization.CultureInfo.InvariantCulture)); CurrentState = IslandState.Expanded; } }
+        partial void OnExpandedWidthChanged(double value) { if (!_isInitializing) { _config.SetSetting("ExpandedWidth", value.ToString(System.Globalization.CultureInfo.InvariantCulture)); if (!_isApplyingPreset) CurrentState = IslandState.Expanded; } }
 
         [ObservableProperty]
         private double _expandedHeight;
-        partial void OnExpandedHeightChanged(double value) { if (!_isInitializing) { _config.SetSetting("ExpandedHeight", value.ToString(System.Globalization.CultureInfo.InvariantCulture)); CurrentState = IslandState.Expanded; } }
+        partial void OnExpandedHeightChanged(double value) { if (!_isInitializing) { _config.SetSetting("ExpandedHeight", value.ToString(System.Globalization.CultureInfo.InvariantCulture)); if (!_isApplyingPreset) CurrentState = IslandState.Expanded; } }
 
         [ObservableProperty]
         private double _idleWidth;
@@ -173,7 +193,7 @@ namespace Project_Nook.ViewModels
 
         [ObservableProperty]
         private double _expandedFilletRadius;
-        partial void OnExpandedFilletRadiusChanged(double value) { if (!_isInitializing) { _config.SetSetting("ExpandedFilletRadius", value.ToString(System.Globalization.CultureInfo.InvariantCulture)); CurrentState = IslandState.Expanded; } }
+        partial void OnExpandedFilletRadiusChanged(double value) { if (!_isInitializing) { _config.SetSetting("ExpandedFilletRadius", value.ToString(System.Globalization.CultureInfo.InvariantCulture)); if (!_isApplyingPreset) CurrentState = IslandState.Expanded; } }
 
         [ObservableProperty]
         private int _animationSpeedMs;
@@ -264,7 +284,21 @@ namespace Project_Nook.ViewModels
                 Collapse();
             };
 
+            // Which style is in use, and make sure it has a saved profile. On upgrade there is no stored
+            // style, so infer it from the offset and adopt the user's existing tuning as that style's
+            // profile - otherwise their first switch away would have nothing to come back to.
+            if (System.Enum.TryParse<NotchStyle>(_config.GetSetting("NotchStyle"), out var savedStyle))
+                CurrentStyle = savedStyle;
+            else
+                CurrentStyle = TopOffset > 0.5 ? NotchStyle.DynamicIsland : NotchStyle.Nook;
+
             _isInitializing = false;
+
+            if (string.IsNullOrEmpty(_config.GetSetting(ProfileKey(CurrentStyle))))
+            {
+                SaveProfile(CurrentStyle);
+                _config.SetSetting("NotchStyle", CurrentStyle.ToString());
+            }
         }
 
         /// <summary>
@@ -321,73 +355,200 @@ namespace Project_Nook.ViewModels
         }
 
         /// <summary>
-        /// The default look: a notch fused to the top edge of the screen, with inverted corner fillets
-        /// blending it into the bezel. Only the bottom corners are rounded, because the top edge is the
-        /// screen edge.
+        /// <summary>
+        /// Which shape the notch currently wears. Persisted, because each style keeps its own settings.
         /// </summary>
-        [RelayCommand]
-        private void ApplyNookStyle()
+        public enum NotchStyle
         {
-            TopOffset = 0.0;
-            EnableFillets = true;
-
-            CornerRadius = 17.0;
-            HoverCornerRadius = 17.0;
-            ExpandedCornerRadius = 30.0;
-            FilletRadius = 13.0;
-            ExpandedFilletRadius = 20.0;
-
-            IdleWidth = 202.0;
-            IdleHeight = 40.0;
-            HoverWidth = 220.0;
-            HoverHeight = 42.0;
-
-            ShadowOpacity = 0.5;
-            ShadowBlurRadius = 20.0;
-            ShadowDepth = 6.0;
+            Nook,
+            DynamicIsland
         }
+
+        /// <summary>Everything a style owns. Serialised per style so switching never loses tuning.</summary>
+        private sealed class NotchStyleProfile
+        {
+            public double TopOffset { get; set; }
+            public bool EnableFillets { get; set; }
+            public double CornerRadius { get; set; }
+            public double HoverCornerRadius { get; set; }
+            public double ExpandedCornerRadius { get; set; }
+            public double FilletRadius { get; set; }
+            public double ExpandedFilletRadius { get; set; }
+            public double IdleWidth { get; set; }
+            public double IdleHeight { get; set; }
+            public double HoverWidth { get; set; }
+            public double HoverHeight { get; set; }
+            public double ShadowOpacity { get; set; }
+            public double ShadowBlurRadius { get; set; }
+            public double ShadowDepth { get; set; }
+        }
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(IsNookStyle))]
+        [NotifyPropertyChangedFor(nameof(IsDynamicIslandStyle))]
+        private NotchStyle _currentStyle = NotchStyle.Nook;
+
+        public bool IsNookStyle => CurrentStyle == NotchStyle.Nook;
+        public bool IsDynamicIslandStyle => CurrentStyle == NotchStyle.DynamicIsland;
+
+        private static string ProfileKey(NotchStyle style) => $"StyleProfile.{style}";
+
+        private NotchStyleProfile CaptureProfile() => new()
+        {
+            TopOffset = TopOffset,
+            EnableFillets = EnableFillets,
+            CornerRadius = CornerRadius,
+            HoverCornerRadius = HoverCornerRadius,
+            ExpandedCornerRadius = ExpandedCornerRadius,
+            FilletRadius = FilletRadius,
+            ExpandedFilletRadius = ExpandedFilletRadius,
+            IdleWidth = IdleWidth,
+            IdleHeight = IdleHeight,
+            HoverWidth = HoverWidth,
+            HoverHeight = HoverHeight,
+            ShadowOpacity = ShadowOpacity,
+            ShadowBlurRadius = ShadowBlurRadius,
+            ShadowDepth = ShadowDepth
+        };
+
+        private void ApplyProfile(NotchStyleProfile profile)
+        {
+            var wasApplyingPreset = _isApplyingPreset;
+            _isApplyingPreset = true;
+            try
+            {
+                TopOffset = profile.TopOffset;
+                EnableFillets = profile.EnableFillets;
+                CornerRadius = profile.CornerRadius;
+                HoverCornerRadius = profile.HoverCornerRadius;
+                ExpandedCornerRadius = profile.ExpandedCornerRadius;
+                FilletRadius = profile.FilletRadius;
+                ExpandedFilletRadius = profile.ExpandedFilletRadius;
+                IdleWidth = profile.IdleWidth;
+                IdleHeight = profile.IdleHeight;
+                HoverWidth = profile.HoverWidth;
+                HoverHeight = profile.HoverHeight;
+                ShadowOpacity = profile.ShadowOpacity;
+                ShadowBlurRadius = profile.ShadowBlurRadius;
+                ShadowDepth = profile.ShadowDepth;
+            }
+            finally
+            {
+                _isApplyingPreset = wasApplyingPreset;
+            }
+        }
+
+        private void SaveProfile(NotchStyle style)
+        {
+            _config.SetSetting(ProfileKey(style), System.Text.Json.JsonSerializer.Serialize(CaptureProfile()));
+        }
+
+        private NotchStyleProfile LoadProfile(NotchStyle style)
+        {
+            var json = _config.GetSetting(ProfileKey(style));
+            if (string.IsNullOrEmpty(json)) return null;
+
+            try { return System.Text.Json.JsonSerializer.Deserialize<NotchStyleProfile>(json); }
+            catch { return null; }
+        }
+
+        /// <summary>The shipped look for each style, used the first time one is selected.</summary>
+        private static NotchStyleProfile FactoryProfile(NotchStyle style) => style == NotchStyle.DynamicIsland
+            ? new NotchStyleProfile
+            {
+                // A floating pill clear of the screen edge. Radius is exactly half the idle height, which
+                // is what makes it read as a pill rather than a rounded box. No fillets: nothing to blend into.
+                TopOffset = 6.0,
+                EnableFillets = false,
+                CornerRadius = 19.0,
+                HoverCornerRadius = 20.0,
+                ExpandedCornerRadius = 32.0,
+                FilletRadius = 13.0,
+                ExpandedFilletRadius = 20.0,
+                IdleWidth = 190.0,
+                IdleHeight = 38.0,
+                HoverWidth = 200.0,
+                HoverHeight = 40.0,
+                ShadowOpacity = 0.35,
+                ShadowBlurRadius = 24.0,
+                ShadowDepth = 4.0
+            }
+            : new NotchStyleProfile
+            {
+                // Fused to the top edge, inverted corner fillets blending it into the bezel.
+                TopOffset = 0.0,
+                EnableFillets = true,
+                CornerRadius = 17.0,
+                HoverCornerRadius = 17.0,
+                ExpandedCornerRadius = 30.0,
+                FilletRadius = 13.0,
+                ExpandedFilletRadius = 20.0,
+                IdleWidth = 202.0,
+                IdleHeight = 40.0,
+                HoverWidth = 220.0,
+                HoverHeight = 42.0,
+                ShadowOpacity = 0.5,
+                ShadowBlurRadius = 20.0,
+                ShadowDepth = 6.0
+            };
 
         /// <summary>
-        /// Apple's Dynamic Island: a pill floating clear of the screen edge, fully rounded (radius is
-        /// exactly half the height), with no fillets since it has no edge to blend into.
+        /// Switches shape without losing work. The style being left is snapshotted first, so returning to
+        /// it restores whatever the sliders were set to rather than the shipped defaults.
         /// </summary>
-        [RelayCommand]
-        private void ApplyDynamicIslandStyle()
+        private void SwitchStyle(NotchStyle style)
         {
-            TopOffset = 6.0;
-            EnableFillets = false;
+            if (style == CurrentStyle) return;
 
-            CornerRadius = 19.0;
-            HoverCornerRadius = 20.0;
-            ExpandedCornerRadius = 32.0;
+            // Snapshot before switching. Everything the sliders touched is in here, so coming back
+            // restores the tuned values rather than the shipped ones.
+            SaveProfile(CurrentStyle);
 
-            IdleWidth = 190.0;
-            IdleHeight = 38.0;
-            HoverWidth = 200.0;
-            HoverHeight = 40.0;
+            CurrentStyle = style;
+            _config.SetSetting("NotchStyle", style.ToString());
 
-            ShadowOpacity = 0.35;
-            ShadowBlurRadius = 24.0;
-            ShadowDepth = 4.0;
+            ApplyProfile(LoadProfile(style) ?? FactoryProfile(style));
         }
+
+        [RelayCommand]
+        private void ApplyNookStyle() => SwitchStyle(NotchStyle.Nook);
+
+        [RelayCommand]
+        private void ApplyDynamicIslandStyle() => SwitchStyle(NotchStyle.DynamicIsland);
+
 
         [RelayCommand]
         private void RestoreDefaults()
         {
-            IsIslandEnabled = true;
-            CollapseOnOutsideClick = false;
-            TriggerText = "WinNook";
+            var wasApplyingPreset = _isApplyingPreset;
+            _isApplyingPreset = true;
+            try
+            {
+                IsIslandEnabled = true;
+                CollapseOnOutsideClick = false;
+                TriggerText = "WinNook";
 
-            NotchColor = "#000000";
-            ShadowColor = "#000000";
-            HoverNotchColor = "#000000";
-            HoverShadowColor = "#000000";
+                NotchColor = "#000000";
+                ShadowColor = "#000000";
+                HoverNotchColor = "#000000";
+                HoverShadowColor = "#000000";
 
-            ExpandedWidth = 750.0;
-            ExpandedHeight = 117.0;
-            AnimationSpeedMs = 500;
+                ExpandedWidth = 750.0;
+                ExpandedHeight = 117.0;
+                AnimationSpeedMs = 500;
 
-            ApplyNookStyle();
+                // Only the style in use is reset. The other style's saved settings are left untouched,
+                // which is the whole point of keeping them separate.
+                ApplyProfile(FactoryProfile(CurrentStyle));
+                SaveProfile(CurrentStyle);
+            }
+            finally
+            {
+                _isApplyingPreset = wasApplyingPreset;
+            }
+
+            // Land back at rest rather than wherever the previous style left the notch.
+            CurrentState = IslandState.Idle;
         }
     }
 }

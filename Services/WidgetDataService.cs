@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Project_Nook.Services
@@ -28,21 +29,44 @@ namespace Project_Nook.Services
     /// </summary>
     public class WidgetDataService : IWidgetDataService
     {
+        private readonly SemaphoreSlim _initGate = new(1, 1);
         private SQLiteAsyncConnection _db;
+        private bool _isInitialized;
 
+        /// <summary>
+        /// Opens the database and creates its tables, once, even when several callers race here.
+        ///
+        /// The notes and clipboard widgets both initialise at startup on separate threads. Publishing
+        /// the connection before the tables existed meant the second caller saw a non-null field, skipped
+        /// the wait, and queried a table that was not there yet: "no such table: ClipboardEntry".
+        /// </summary>
         public async Task InitializeAsync()
         {
-            if (_db != null) return;
+            if (_isInitialized) return;
 
-            var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            var dbDir = Path.Combine(appData, "WinNook");
-            if (!Directory.Exists(dbDir)) Directory.CreateDirectory(dbDir);
+            await _initGate.WaitAsync();
+            try
+            {
+                if (_isInitialized) return;
 
-            var dbPath = Path.Combine(dbDir, "widgets.db3");
-            _db = new SQLiteAsyncConnection(dbPath);
+                var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                var dbDir = Path.Combine(appData, "WinNook");
+                if (!Directory.Exists(dbDir)) Directory.CreateDirectory(dbDir);
 
-            await _db.CreateTableAsync<NoteItem>();
-            await _db.CreateTableAsync<ClipboardEntry>();
+                var dbPath = Path.Combine(dbDir, "widgets.db3");
+                var connection = new SQLiteAsyncConnection(dbPath);
+
+                await connection.CreateTableAsync<NoteItem>();
+                await connection.CreateTableAsync<ClipboardEntry>();
+
+                // Published only once the schema is actually usable.
+                _db = connection;
+                _isInitialized = true;
+            }
+            finally
+            {
+                _initGate.Release();
+            }
         }
 
         /// <summary>

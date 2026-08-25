@@ -68,7 +68,10 @@
         <Setter Property="Foreground" Value="#8A8A8A" />
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="TextAlignment" Value="Right" />
-        <Setter Property="MinWidth" Value="40" />
+        <Setter Property="MinWidth" Value="44" />
+        <!-- Left margin separates the number from the slider; the right margin keeps it clear of the
+             scroll bar, which was slicing the last digit off values like "20" and "100". -->
+        <Setter Property="Margin" Value="12,0,4,0" />
         <Setter Property="FontFamily" Value="Consolas, Cascadia Mono, monospace" />
     </Style>
 

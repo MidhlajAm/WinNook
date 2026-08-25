@@ -63,11 +63,13 @@ namespace Project_Nook.Services
         {
             _collapseTimer.Stop();
             _currentPriority = 0;
+
+            // Only collapse if the notification is still the thing on screen. If the user expanded the
+            // notch in the meantime, leave it alone - IslandViewModel already cleared the notification
+            // when the state moved off Triggered.
             if (_islandVm.CurrentState == Models.IslandState.Triggered)
             {
                 _islandVm.CurrentState = Models.IslandState.Idle;
-                _islandVm.NotificationText = string.Empty;
-                _islandVm.TriggerIcon = Wpf.Ui.Controls.SymbolRegular.Empty;
             }
         }
 

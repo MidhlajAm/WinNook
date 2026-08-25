@@ -17,6 +17,7 @@ namespace Project_Nook.ViewModels
     public partial class ControlCenterViewModel : ObservableObject
     {
         private readonly IConfigurationService _configurationService;
+        private bool _isSyncingPins;
 
         [ObservableProperty]
         private string _greeting = "Welcome to WinNook Control Center!";
@@ -79,14 +80,40 @@ namespace Project_Nook.ViewModels
             AppsView = CollectionViewSource.GetDefaultView(DiveInApps);
             AppsView.Filter = FilterApp;
 
+            // The pinned list is the source of truth, and it can change from outside this window: the
+            // notch's own unpin badge edits QuickLaunch.Apps directly. Without this the Apps tab toggle
+            // kept showing an app as pinned after it had been removed from the rail.
             QuickLaunch.Apps.CollectionChanged += (s, e) =>
             {
+                SyncPinnedToggles();
                 OnPropertyChanged(nameof(CanPinMore));
                 OnPropertyChanged(nameof(PinCountLabel));
             };
 
             IsStartupEnabled = _configurationService.IsStartupEnabled;
             LoadInstalledApps();
+        }
+
+        /// <summary>
+        /// Pushes the pinned list back onto the app rows' toggles. Guarded, because setting IsPinned
+        /// raises PropertyChanged, which would call straight back into Pin/Unpin and loop.
+        /// </summary>
+        private void SyncPinnedToggles()
+        {
+            if (_isSyncingPins) return;
+
+            _isSyncingPins = true;
+            try
+            {
+                foreach (var app in DiveInApps)
+                {
+                    app.IsPinned = QuickLaunch.IsPinnedPath(app.TargetPath);
+                }
+            }
+            finally
+            {
+                _isSyncingPins = false;
+            }
         }
 
         private bool FilterApp(object item)
@@ -208,6 +235,9 @@ namespace Project_Nook.ViewModels
 
             if (e.PropertyName == nameof(AppItem.IsPinned) && sender is AppItem app)
             {
+                // This change came from SyncPinnedToggles reflecting the rail, not from the user.
+                if (_isSyncingPins) return;
+
                 if (app.IsPinned)
                 {
                     // The rail holds six. If it is full, put the toggle back rather than silently ignoring it.
