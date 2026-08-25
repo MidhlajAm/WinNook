@@ -15,6 +15,8 @@ Built with C# and WPF. No Electron, no browser, no background web server.
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D4?style=flat-square)](https://www.microsoft.com/windows)
 [![UI](https://img.shields.io/badge/UI-WPF%20%2B%20Fluent-5C2D91?style=flat-square)](https://github.com/lepoco/wpfui)
 
+<img src="docs/media/winnook-demo.gif" width="820" alt="WinNook in motion" />
+
 </div>
 
 ---
@@ -29,6 +31,28 @@ widgets. Drag a file onto it and the file is kept on a shelf you can pull from l
 The interaction model is borrowed from Apple's Dynamic Island. The implementation is native
 Windows: WPF for the UI, Win32 and WASAPI for the system hooks, SQLite for anything that has
 to survive a restart.
+
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="docs/media/notch-idle.png" alt="The notch at rest" /><br />
+      <sub><b>At rest.</b> Fused to the top edge, out of the way until something happens.</sub>
+    </td>
+    <td width="50%" valign="top">
+      <img src="docs/media/dashboard.png" alt="The expanded widget dashboard" /><br />
+      <sub><b>Expanded.</b> Music, calendar, volume, timer and screenshot on one strip.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" valign="top">
+      <img src="docs/media/control-center.png" alt="The Control Center" /><br />
+      <sub><b>Control Center.</b> Every dimension, radius and shadow value is a live slider, and each
+      notch style keeps its own settings.</sub>
+    </td>
+  </tr>
+</table>
 
 ## Highlights
 
