@@ -1,14 +1,6 @@
-# Visual Studio
-.vs/
-bin/
-obj/
-*.user
-*.suo
-*.ide
-*.sqlite
-*.db
-
-# Build results
+# Build output
+[Bb]in/
+[Oo]bj/
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
@@ -18,7 +10,56 @@ x86/
 [Aa][Rr][Mm]/
 [Aa][Rr][Mm]64/
 bld/
-[Bb]in/
-[Oo]bj/
 [Ll]og/
 [Ll]ogs/
+artifacts/
+publish/
+
+# Visual Studio / Rider / VS Code
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+*.ide
+*.rsuser
+*.svclog
+*.psess
+*.vsp
+*.vspx
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+!packages/build/
+*.nuget.props
+*.nuget.targets
+project.lock.json
+project.fragment.lock.json
+
+# Installer output. The setup binary is a release artefact, not source: it is 60+ MB and is
+# rebuilt from the publish folder by Installer/WinNook.iss.
+Installer/Output/
+*.iss.bak
+
+# Local databases and captures
+*.sqlite
+*.db
+*.db3
+*.mp4
+
+# Scratch: screen recordings and bug screenshots used while developing, not part of the project
+LOGS/
+Claude/
+chrome_info.json
+
+# OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.stackdump

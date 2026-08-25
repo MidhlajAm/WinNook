@@ -20,6 +20,12 @@ namespace Project_Nook
         {
             e.Cancel = true;
             this.Hide();
+
+            // Settings writes are debounced, and force-killing the app from Task Manager never reaches
+            // OnExit. Dismissing this window is the moment a setting was most likely just edited, so
+            // commit it now rather than trusting the process to shut down cleanly.
+            App.Current.Services.GetRequiredService<Project_Nook.Services.IConfigurationService>().Flush();
+
             base.OnClosing(e);
         }
 

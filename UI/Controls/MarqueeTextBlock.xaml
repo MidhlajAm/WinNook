@@ -1,0 +1,26 @@
+<UserControl x:Class="Project_Nook.UI.Controls.MarqueeTextBlock"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             ClipToBounds="True"
+             SizeChanged="UserControl_SizeChanged">
+    <Grid x:Name="RootGrid" Background="Transparent">
+        <!-- Hidden reference to size the Grid vertically -->
+        <TextBlock Text="{Binding Text, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                   FontSize="{Binding FontSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                   FontWeight="{Binding FontWeight, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                   Opacity="0" IsHitTestVisible="False" VerticalAlignment="Center" />
+                   
+        <Canvas x:Name="MainCanvas" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <TextBlock x:Name="MainText" 
+                       Text="{Binding Text, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                       Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                       FontSize="{Binding FontSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                       FontWeight="{Binding FontWeight, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                       SizeChanged="MainText_SizeChanged">
+                <TextBlock.RenderTransform>
+                    <TranslateTransform x:Name="Translate" />
+                </TextBlock.RenderTransform>
+            </TextBlock>
+        </Canvas>
+    </Grid>
+</UserControl>

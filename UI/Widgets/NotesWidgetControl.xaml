@@ -1,0 +1,22 @@
+<UserControl x:Class="Project_Nook.UI.Widgets.NotesWidgetControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             mc:Ignorable="d"
+             d:DesignHeight="64" d:DesignWidth="64"
+             Foreground="White">
+
+    <Button Style="{StaticResource WidgetTileStyle}" Focusable="False"
+            Command="{Binding OpenPageCommand}"
+            ToolTip="{Binding Preview}">
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="6,0">
+            <ui:SymbolIcon Symbol="Note24" FontSize="18" Foreground="White"
+                           HorizontalAlignment="Center" Margin="0,0,0,3" />
+            <TextBlock Text="{Binding Preview}" Style="{StaticResource WidgetTileCaptionStyle}"
+                       FontSize="8" TextTrimming="CharacterEllipsis" TextAlignment="Center"
+                       MaxWidth="52" />
+        </StackPanel>
+    </Button>
+</UserControl>

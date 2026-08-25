@@ -6,70 +6,114 @@
              Foreground="White">
     <UserControl.Resources>
         <converters:TypeToIconConverter x:Key="TypeToIconConverter" />
+        <converters:PathToImageConverter x:Key="PathToImageConverter" />
     </UserControl.Resources>
-    <Grid Margin="16">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
+    
+    <Grid Margin="16,8">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
         
-        <Grid Margin="0,0,0,16">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            
-            <ui:Button Grid.Column="0" Appearance="Transparent" Command="{Binding CloseShelfCommand}" Margin="0,0,12,0" Padding="4">
-                <ui:SymbolIcon Symbol="ChevronLeft24" FontSize="20" Foreground="White" />
-            </ui:Button>
-
-            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                <ui:SymbolIcon Symbol="Library24" FontSize="20" Margin="0,0,8,0" />
-                <TextBlock Text="Shelf" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" />
-            </StackPanel>
-        </Grid>
+        <!-- Back Button -->
+        <Border Grid.Column="0" Background="Transparent" Margin="0,0,24,0" VerticalAlignment="Center" Padding="8" 
+                Cursor="Hand" PreviewMouseLeftButtonDown="BackButton_PreviewMouseLeftButtonDown">
+            <ui:SymbolIcon Symbol="ArrowLeft24" FontSize="20" Foreground="White" />
+        </Border>
         
-        <ListBox Grid.Row="1" ItemsSource="{Binding Items}" Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <Border Background="#1AFFFFFF" CornerRadius="8" Margin="0,4" Padding="8"
-                            MouseMove="Border_MouseMove" MouseLeftButtonDown="Border_MouseLeftButtonDown"
-                            Cursor="Hand">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
+        <!-- Horizontal List -->
+        <ScrollViewer Grid.Column="1" x:Name="HorizontalScrollViewer" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" PreviewMouseWheel="HorizontalScrollViewer_PreviewMouseWheel">
+            <ItemsControl ItemsSource="{Binding Items}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Margin="0,0,16,0" Width="64" VerticalAlignment="Top" 
+                                    PreviewMouseLeftButtonUp="Item_PreviewMouseLeftButtonUp"
+                                    MouseMove="Border_MouseMove" MouseLeftButtonDown="Border_MouseLeftButtonDown"
+                                    Cursor="Hand" Background="Transparent"> <!-- Background for hit testing -->
                             
-                            <ui:SymbolIcon Symbol="{Binding Type, Converter={StaticResource TypeToIconConverter}}" FontSize="24" Margin="0,0,12,0" />
+                            <!-- Squircle Container -->
+                            <Grid Width="64" Height="64" Margin="0,0,0,8">
+                                <!-- Base squircle shape -->
+                                <Border Background="#4DC4C4C4" CornerRadius="16">
+                                    <Grid>
+                                        <!-- Image Content -->
+                                        <Border CornerRadius="16" Visibility="Collapsed" x:Name="ImageContent">
+                                            <Border.Background>
+                                                <ImageBrush ImageSource="{Binding StoredPath, Converter={StaticResource PathToImageConverter}}" Stretch="UniformToFill" />
+                                            </Border.Background>
+                                        </Border>
+                                        
+                                        <!-- Text Content -->
+                                        <TextBlock Text="{Binding Content}" Foreground="#D0D0D0" FontSize="9" TextWrapping="Wrap" 
+                                                   Margin="6" Visibility="Collapsed" x:Name="TextContent" TextTrimming="CharacterEllipsis" 
+                                                   VerticalAlignment="Center" HorizontalAlignment="Center" TextAlignment="Center" />
+                                        
+                                        <!-- Icon Content -->
+                                        <ui:SymbolIcon Symbol="{Binding Type, Converter={StaticResource TypeToIconConverter}}" 
+                                                       FontSize="24" Foreground="White" 
+                                                       Visibility="Visible" x:Name="IconContent" />
+                                    </Grid>
+                                </Border>
+                                
+                                <!-- Delete Badge (Red Circle) -->
+                                <Border x:Name="DeleteBadge" Background="#E53935" Width="16" Height="16" CornerRadius="8" 
+                                        HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-4,-4,0"
+                                        Visibility="Collapsed">
+                                    <ui:Button Appearance="Transparent" Padding="0" Margin="0" BorderThickness="0" 
+                                               Command="{Binding DataContext.DeleteItemCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" 
+                                               CommandParameter="{Binding}" ToolTip="Delete"
+                                               Width="16" Height="16">
+                                        <ui:SymbolIcon Symbol="Dismiss24" FontSize="8" Foreground="White" />
+                                    </ui:Button>
+                                </Border>
+                            </Grid>
                             
-                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding OriginalName}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                                <TextBlock Text="{Binding Type}" FontSize="12" Foreground="#AAFFFFFF" />
-                            </StackPanel>
+                            <!-- Name Label -->
+                            <TextBlock Text="{Binding OriginalName}" Foreground="White" FontSize="10" 
+                                       TextAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,0,4" />
+                        </StackPanel>
+                        
+                        <DataTemplate.Triggers>
+                            <!-- Show Delete badge on hover -->
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="DeleteBadge" Property="Visibility" Value="Visible" />
+                            </Trigger>
                             
-                            <ui:Button Grid.Column="2" Icon="{ui:SymbolIcon Open24}" Command="{Binding DataContext.OpenItemCommand, RelativeSource={RelativeSource AncestorType=ListBox}}" CommandParameter="{Binding}" Margin="4,0" Appearance="Transparent" />
-                            <ui:Button Grid.Column="3" Icon="{ui:SymbolIcon Delete24}" Command="{Binding DataContext.DeleteItemCommand, RelativeSource={RelativeSource AncestorType=ListBox}}" CommandParameter="{Binding}" Margin="4,0" Appearance="Danger" />
-                        </Grid>
-                    </Border>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-            
-            <ListBox.ItemContainerStyle>
-                <Style TargetType="ListBoxItem">
-                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                    <Setter Property="Background" Value="Transparent" />
-                    <Setter Property="Template">
-                        <Setter.Value>
-                            <ControlTemplate TargetType="ListBoxItem">
-                                <ContentPresenter />
-                            </ControlTemplate>
-                        </Setter.Value>
-                    </Setter>
+                            <!-- Toggle visibility based on Type -->
+                            <DataTrigger Binding="{Binding Type}" Value="Image">
+                                <Setter TargetName="ImageContent" Property="Visibility" Value="Visible" />
+                                <Setter TargetName="IconContent" Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Type}" Value="Text">
+                                <Setter TargetName="TextContent" Property="Visibility" Value="Visible" />
+                                <Setter TargetName="IconContent" Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+        
+        <!-- Empty Placeholder -->
+        <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center" Orientation="Horizontal">
+            <StackPanel.Style>
+                <Style TargetType="StackPanel">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Items.Count}" Value="0">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
                 </Style>
-            </ListBox.ItemContainerStyle>
-        </ListBox>
+            </StackPanel.Style>
+            <ui:SymbolIcon Symbol="Library24" FontSize="20" Foreground="#66FFFFFF" Margin="0,0,8,0" />
+            <TextBlock Text="Your shelf is empty. Drag and drop items here." 
+                       Foreground="#66FFFFFF" FontSize="12" VerticalAlignment="Center" />
+        </StackPanel>
     </Grid>
 </UserControl>

@@ -68,6 +68,7 @@ namespace Project_Nook.Helpers
                                         {
                                             DisplayName = displayName,
                                             ExecutableName = exeName,
+                                            TargetPath = targetPath,
                                             IconImage = iconImage
                                         });
                                     }

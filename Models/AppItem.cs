@@ -10,6 +10,12 @@ namespace Project_Nook.Models
 
         public string DisplayName { get; set; } = string.Empty;
         public string ExecutableName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Full path to the executable. ExecutableName is only a filename, which is enough to match a
+        /// foreground window for Dive In but not enough to launch anything.
+        /// </summary>
+        public string TargetPath { get; set; } = string.Empty;
         public System.Windows.Media.ImageSource? IconImage { get; set; }
 
         public bool IsDiveInEnabled
@@ -20,6 +26,22 @@ namespace Project_Nook.Models
                 if (_isDiveInEnabled != value)
                 {
                     _isDiveInEnabled = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private bool _isPinned;
+
+        /// <summary>Whether this app sits in the Quick Launch rail.</summary>
+        public bool IsPinned
+        {
+            get => _isPinned;
+            set
+            {
+                if (_isPinned != value)
+                {
+                    _isPinned = value;
                     OnPropertyChanged();
                 }
             }

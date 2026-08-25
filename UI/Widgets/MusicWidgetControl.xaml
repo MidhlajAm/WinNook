@@ -4,8 +4,9 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:controls="clr-namespace:Project_Nook.UI.Controls"
              mc:Ignorable="d" 
-             d:DesignWidth="360" d:DesignHeight="80"
+             d:DesignWidth="300" d:DesignHeight="80"
              Foreground="White">
     <UserControl.Resources>
         <!-- Converter for Play/Pause Icon -->
@@ -17,95 +18,53 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
-
-        <!-- Rounded Image -->
-        <Style x:Key="RoundedImageStyle" TargetType="Border">
-            <Setter Property="CornerRadius" Value="12" />
-            <Setter Property="Background" Value="#2A2E37" /> <!-- Fallback when no art -->
-        </Style>
     </UserControl.Resources>
 
-    <Border Background="#1AFFFFFF" CornerRadius="16" Padding="12">
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
 
-            <!-- Album Art -->
-            <Border Grid.Column="0" Width="56" Height="56" Style="{StaticResource RoundedImageStyle}" Margin="0,0,12,0">
-                <Border.Background>
-                    <ImageBrush ImageSource="{Binding AlbumArt}" Stretch="UniformToFill" />
-                </Border.Background>
-                <!-- Fallback Icon if no album art -->
-                <TextBlock Text="🎵" FontSize="24" Foreground="#888" HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <TextBlock.Style>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="Visibility" Value="Collapsed" />
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding AlbumArt}" Value="{x:Null}">
-                                    <Setter Property="Visibility" Value="Visible" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBlock.Style>
-                </TextBlock>
-            </Border>
+        <!-- Album Art -->
+        <Border Grid.Column="0" Width="64" Height="64" CornerRadius="12" Margin="0,0,16,0" VerticalAlignment="Center">
+            <Border.Background>
+                <ImageBrush ImageSource="{Binding AlbumArt}" Stretch="UniformToFill" />
+            </Border.Background>
+            <!-- Fallback Icon if no album art -->
+            <TextBlock Text="🎵" FontSize="24" Foreground="#888" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding AlbumArt}" Value="{x:Null}">
+                                <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+        </Border>
 
-            <!-- Title & Artist -->
-            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,8,0">
-                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="16" Foreground="White" TextTrimming="CharacterEllipsis" Margin="0,0,0,4" />
-                <TextBlock Text="{Binding Artist}" FontSize="13" Foreground="#AAA" TextTrimming="CharacterEllipsis" />
-            </StackPanel>
-
-            <!-- Playback Controls -->
-            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                <Button Command="{Binding PreviousCommand}" Background="Transparent" BorderThickness="0" Padding="8" Margin="0,0,4,0" Cursor="Hand">
-                    <Button.Template>
-                        <ControlTemplate TargetType="Button">
-                            <Border Background="{TemplateBinding Background}" CornerRadius="16">
-                                <ui:SymbolIcon Symbol="Previous24" FontSize="20" Foreground="White" />
-                            </Border>
-                            <ControlTemplate.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="#20FFFFFF" />
-                                </Trigger>
-                            </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </Button.Template>
+        <!-- Title, Artist & Controls -->
+        <StackPanel Grid.Column="1" VerticalAlignment="Center" MaxWidth="150">
+            <controls:MarqueeTextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="15" Foreground="White" MaxWidth="140" Margin="0,0,0,2" />
+            <controls:MarqueeTextBlock Text="{Binding Artist}" FontSize="12" Foreground="#AAA" MaxWidth="140" Margin="0,0,0,8" />
+            
+            <StackPanel Orientation="Horizontal">
+                <!-- Previous -->
+                <Button Command="{Binding PreviousCommand}" Background="Transparent" BorderThickness="0" Padding="4" Margin="0,0,8,0" Cursor="Hand">
+                    <ui:SymbolIcon Symbol="Previous24" Filled="True" FontSize="16" Foreground="White" />
                 </Button>
-
-                <Button Command="{Binding PlayPauseCommand}" Background="Transparent" BorderThickness="0" Padding="8" Margin="0,0,4,0" Cursor="Hand">
-                    <Button.Template>
-                        <ControlTemplate TargetType="Button">
-                            <Border Background="{TemplateBinding Background}" CornerRadius="16">
-                                <ui:SymbolIcon Style="{StaticResource PlayPauseIconStyle}" FontSize="24" Foreground="White" />
-                            </Border>
-                            <ControlTemplate.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="#20FFFFFF" />
-                                </Trigger>
-                            </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </Button.Template>
+                <!-- Play/Pause -->
+                <Button Command="{Binding PlayPauseCommand}" Background="Transparent" BorderThickness="0" Padding="4" Margin="0,0,8,0" Cursor="Hand">
+                    <ui:SymbolIcon Style="{StaticResource PlayPauseIconStyle}" Filled="True" FontSize="20" Foreground="White" />
                 </Button>
-
-                <Button Command="{Binding NextCommand}" Background="Transparent" BorderThickness="0" Padding="8" Cursor="Hand">
-                    <Button.Template>
-                        <ControlTemplate TargetType="Button">
-                            <Border Background="{TemplateBinding Background}" CornerRadius="16">
-                                <ui:SymbolIcon Symbol="Next24" FontSize="20" Foreground="White" />
-                            </Border>
-                            <ControlTemplate.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="#20FFFFFF" />
-                                </Trigger>
-                            </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </Button.Template>
+                <!-- Next -->
+                <Button Command="{Binding NextCommand}" Background="Transparent" BorderThickness="0" Padding="4" Cursor="Hand">
+                    <ui:SymbolIcon Symbol="Next24" Filled="True" FontSize="16" Foreground="White" />
                 </Button>
             </StackPanel>
-        </Grid>
-    </Border>
+        </StackPanel>
+    </Grid>
 </UserControl>

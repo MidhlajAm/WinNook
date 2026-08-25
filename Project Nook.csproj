@@ -1,10 +1,21 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <RootNamespace>Project_Nook</RootNamespace>
+    <!-- The product is WinNook everywhere: the tray, the settings registry key, the AppData folder,
+         and the uninstaller. Shipping an executable called "Project Nook.exe" would break that, and
+         the self-destruct feature already looks for WinNook.exe by name. -->
+    <AssemblyName>WinNook</AssemblyName>
+    <Product>WinNook</Product>
+    <Company>Midhlaj AM</Company>
+    <Version>1.0.0</Version>
+    <FileVersion>1.0.0.0</FileVersion>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <Copyright>Copyright (c) 2026 Midhlaj AM</Copyright>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\winnook.ico</ApplicationIcon>
     <Platforms>x86;x64;ARM64</Platforms>
     <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
     <PublishProfile>win-$(Platform).pubxml</PublishProfile>
@@ -14,6 +25,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Resource, not Content: the tray and window icons load it through a pack:// URI. -->
+    <Resource Include="Assets\winnook.ico" />
     <Content Include="Assets\SplashScreen.scale-200.png" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />
     <Content Include="Assets\Square150x150Logo.scale-200.png" />
@@ -39,12 +52,20 @@
   </ItemGroup>
 
 
+  <ItemGroup>
+    <Folder Include="Claude help files\" />
+    <Folder Include="Claude\" />
+  </ItemGroup>
+
+
 
   <!-- Publish Properties -->
   <PropertyGroup>
     <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
     <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
-    <PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
-    <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
+    <!-- Trimming is not supported for WPF, and this app leans on reflection throughout: XAML type
+         resolution, sqlite-net's model mapping, and System.Text.Json. A trimmed Release build compiles
+         fine and then fails at runtime, so it stays off. -->
+    <PublishTrimmed>False</PublishTrimmed>
   </PropertyGroup>
 </Project>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="WinNook">
+  <title>WinNook</title>
+  <rect x="28" y="26" width="88" height="76" rx="16" fill="#0078D4"/>
+  <rect x="140" y="26" width="88" height="76" rx="16" fill="#0078D4"/>
+  <rect x="28" y="154" width="132" height="76" rx="16" fill="#0078D4"/>
+  <rect x="184" y="154" width="44" height="76" rx="16" fill="#4CC2FF"/>
+  <rect x="24" y="104" width="208" height="48" rx="24" fill="#16181D"/>
+  <circle cx="58" cy="128" r="10" fill="#4CC2FF"/>
+  <rect x="86" y="120" width="72" height="16" rx="8" fill="#FFFFFF"/>
+</svg>

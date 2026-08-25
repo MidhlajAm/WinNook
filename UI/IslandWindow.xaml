@@ -24,9 +24,14 @@
         <local_conv:StringToColorConverter x:Key="ColorConverter" xmlns:local_conv="clr-namespace:Project_Nook.Converters"/>
         <local_conv:FilletRadiusToPathConverter x:Key="FilletPathConverter" xmlns:local_conv="clr-namespace:Project_Nook.Converters"/>
         <local_conv:FilletRadiusToMarginConverter x:Key="FilletMarginConverter" xmlns:local_conv="clr-namespace:Project_Nook.Converters"/>
+        <local_conv:DoubleToTopMarginConverter x:Key="TopMarginConverter" xmlns:local_conv="clr-namespace:Project_Nook.Converters"/>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
     </Window.Resources>
 
+    <!-- Deliberately NOT UseLayoutRounding: this grid is centred and its child's width is spring
+         animated through fractional values, so per-frame rounding makes the centred offset flip between
+         whole pixels and the notch visibly shifts left and right as it settles. The fillet seam this was
+         meant to solve is handled by overlapping the fillets instead (FilletRadiusToMarginConverter). -->
     <Grid HorizontalAlignment="Center" VerticalAlignment="Top">
         <Grid.Style>
             <Style TargetType="Grid">
@@ -41,11 +46,15 @@
                 </Style.Triggers>
             </Style>
         </Grid.Style>
+
+        <!-- The notch and its fillets share this layer so the top offset moves all three together.
+             Offset 0 sits flush against the screen edge (the fillets blend it in); a positive offset
+             detaches it into a floating pill, which is the Dynamic Island look. -->
+        <Grid x:Name="NotchLayer" VerticalAlignment="Top" HorizontalAlignment="Center"
+              Margin="{Binding ViewModel.TopOffset, Converter={StaticResource TopMarginConverter}}">
         <Border x:Name="NotchBorder"
                 VerticalAlignment="Top"
                 HorizontalAlignment="Center"
-                Width="{Binding ViewModel.IdleWidth, Mode=OneWay}"
-                Height="{Binding ViewModel.IdleHeight, Mode=OneWay}"
                 MouseEnter="NotchBorder_MouseEnter"
                 MouseLeave="NotchBorder_MouseLeave"
                 MouseLeftButtonDown="NotchBorder_MouseLeftButtonDown"
@@ -54,15 +63,25 @@
                 DragLeave="NotchBorder_DragLeave"
                 Drop="NotchBorder_Drop">
             <Border.Background>
-                <SolidColorBrush x:Name="NotchBackground" Color="{Binding ViewModel.NotchColor, Converter={StaticResource ColorConverter}, Mode=OneWay}" />
+                <!-- Colour is driven by the palette spring in code-behind, so a hover blend can be
+                     interrupted and reversed mid-flight. See IslandWindow.ApplyPaletteMix. -->
+                <SolidColorBrush x:Name="NotchBackground" Color="Black" />
             </Border.Background>
             <Border.Effect>
-                <DropShadowEffect x:Name="NotchShadow" BlurRadius="{Binding ViewModel.ShadowBlurRadius, Mode=OneWay}" 
-                                  ShadowDepth="5" 
-                                  Opacity="{Binding ViewModel.ShadowOpacity, Mode=OneWay}" 
-                                  Color="{Binding ViewModel.ShadowColor, Converter={StaticResource ColorConverter}, Mode=OneWay}" />
+                <!-- Direction 270 is straight down. The notch is anchored to the top screen edge, so a
+                     diagonal offset threw the shadow sideways off an edge that has nothing behind it. -->
+                <DropShadowEffect x:Name="NotchShadow"
+                                  BlurRadius="{Binding ViewModel.ShadowBlurRadius, Mode=OneWay}"
+                                  ShadowDepth="{Binding ViewModel.ShadowDepth, Mode=OneWay}"
+                                  Direction="270"
+                                  Opacity="{Binding ViewModel.ShadowOpacity, Mode=OneWay}"
+                                  RenderingBias="Quality"
+                                  Color="Black" />
             </Border.Effect>
-            <Grid>
+            <!-- Clipped in code to a rect with rounded bottom corners. Border.ClipToBounds only clips to
+                 the layout rectangle, so without this the expanded content (album art, widget tiles)
+                 renders straight through the curve of the bottom corners. -->
+            <Grid x:Name="NotchContentHost">
                 <!-- Idle/Hover Content -->
                 <Grid x:Name="IdleContentGrid" Margin="12,0" VerticalAlignment="Center">
                     <!-- Text Layout (Default) -->
@@ -94,7 +113,7 @@
                                 </Style>
                             </ui:SymbolIcon.Style>
                         </ui:SymbolIcon>
-                        <TextBlock Text="{Binding ViewModel.TriggerText}" Foreground="White" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding ViewModel.DisplayText}" Foreground="White" VerticalAlignment="Center" />
                     </StackPanel>
 
                     <!-- Media Layout -->
@@ -132,27 +151,23 @@
                 </Grid>
                 
                 <!-- Expanded Content (Dashboard or Shelf) -->
-                <Grid x:Name="ExpandedContentGrid" Visibility="Collapsed" Margin="0,16,0,0">
-                    <ContentControl x:Name="ShelfView">
-                        <ContentControl.Style>
-                            <Style TargetType="ContentControl">
-                                <Setter Property="Visibility" Value="Visible" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding ViewModel.IsShelfVisible}" Value="False">
-                                        <Setter Property="Visibility" Value="Collapsed" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </ContentControl.Style>
-                        <local_ui:ShelfControl />
-                    </ContentControl>
-
+                <!-- Pinned to the final expanded width so the dashboard lays out once and is then revealed by
+                     the growing border, instead of re-measuring every frame. Without this the marquee text
+                     blocks re-run their overflow maths ~60 times a second during an expand. -->
+                <Grid x:Name="ExpandedContentGrid" Visibility="Collapsed" Margin="0,8,0,0"
+                      Width="{Binding ViewModel.ExpandedWidth, Mode=OneWay}"
+                      Opacity="0"
+                      RenderTransformOrigin="0.5,0">
+                    <Grid.RenderTransform>
+                        <ScaleTransform x:Name="ExpandedContentScale" ScaleX="0.94" ScaleY="0.94" />
+                    </Grid.RenderTransform>
+                    <!-- Pages. Only one is visible at a time, selected by ViewModel.CurrentPage. -->
                     <ContentControl x:Name="DashboardView" DataContext="{Binding ViewModel.DashboardViewModel}">
                         <ContentControl.Style>
                             <Style TargetType="ContentControl">
                                 <Setter Property="Visibility" Value="Collapsed" />
                                 <Style.Triggers>
-                                    <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=DataContext.ViewModel.IsShelfVisible}" Value="False">
+                                    <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=DataContext.ViewModel.CurrentPage}" Value="Dashboard">
                                         <Setter Property="Visibility" Value="Visible" />
                                     </DataTrigger>
                                 </Style.Triggers>
@@ -160,22 +175,65 @@
                         </ContentControl.Style>
                         <widgets:WidgetDashboardControl />
                     </ContentControl>
+
+                    <ContentControl x:Name="ShelfView">
+                        <ContentControl.Style>
+                            <Style TargetType="ContentControl">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ViewModel.CurrentPage}" Value="Shelf">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ContentControl.Style>
+                        <local_ui:ShelfControl />
+                    </ContentControl>
+
+                    <ContentControl x:Name="NotesView">
+                        <ContentControl.Style>
+                            <Style TargetType="ContentControl">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ViewModel.CurrentPage}" Value="Notes">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ContentControl.Style>
+                        <widgets:NotesPageControl />
+                    </ContentControl>
+
+                    <ContentControl x:Name="ClipboardView">
+                        <ContentControl.Style>
+                            <Style TargetType="ContentControl">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ViewModel.CurrentPage}" Value="Clipboard">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ContentControl.Style>
+                        <widgets:ClipboardPageControl />
+                    </ContentControl>
                 </Grid>
             </Grid>
         </Border>
 
         <!-- Left Fillet -->
-        <Path Data="{Binding ViewModel.FilletRadius, Converter={StaticResource FilletPathConverter}, ConverterParameter=Left}"
+        <Path Data="{Binding AnimatableFilletRadius, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource FilletPathConverter}, ConverterParameter=Left}"
               Fill="{Binding Background, ElementName=NotchBorder}"
               HorizontalAlignment="Left" VerticalAlignment="Top"
-              Margin="{Binding ViewModel.FilletRadius, Converter={StaticResource FilletMarginConverter}, ConverterParameter=Left}"
+              Margin="{Binding AnimatableFilletRadius, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource FilletMarginConverter}, ConverterParameter=Left}"
               Visibility="{Binding ViewModel.EnableFillets, Converter={StaticResource BoolToVis}}" />
               
         <!-- Right Fillet -->
-        <Path Data="{Binding ViewModel.FilletRadius, Converter={StaticResource FilletPathConverter}, ConverterParameter=Right}"
+        <Path Data="{Binding AnimatableFilletRadius, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource FilletPathConverter}, ConverterParameter=Right}"
               Fill="{Binding Background, ElementName=NotchBorder}"
               HorizontalAlignment="Right" VerticalAlignment="Top"
-              Margin="{Binding ViewModel.FilletRadius, Converter={StaticResource FilletMarginConverter}, ConverterParameter=Right}"
+              Margin="{Binding AnimatableFilletRadius, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource FilletMarginConverter}, ConverterParameter=Right}"
               Visibility="{Binding ViewModel.EnableFillets, Converter={StaticResource BoolToVis}}" />
+        </Grid>
     </Grid>
 </Window>

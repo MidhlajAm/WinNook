@@ -18,7 +18,6 @@ namespace Project_Nook.Services
 
         private int _currentPriority = 0;
         private DispatcherTimer _collapseTimer;
-        private string _originalTriggerText = "WinNook";
 
         public TriggerEngine(
             IslandViewModel islandVm, 
@@ -67,24 +66,24 @@ namespace Project_Nook.Services
             if (_islandVm.CurrentState == Models.IslandState.Triggered)
             {
                 _islandVm.CurrentState = Models.IslandState.Idle;
-                _islandVm.TriggerText = _originalTriggerText;
+                _islandVm.NotificationText = string.Empty;
                 _islandVm.TriggerIcon = Wpf.Ui.Controls.SymbolRegular.Empty;
             }
         }
 
-        private void Trigger(int priority, string text, Wpf.Ui.Controls.SymbolRegular icon = Wpf.Ui.Controls.SymbolRegular.Empty)
+        /// <summary>
+        /// Raises a transient notch notification. Public so widgets (a finished timer, for instance) go
+        /// through the same priority gate, auto-collapse timer, and trigger-text restore as system events,
+        /// instead of writing CurrentState directly and fighting all three.
+        /// </summary>
+        public void Trigger(int priority, string text, Wpf.Ui.Controls.SymbolRegular icon = Wpf.Ui.Controls.SymbolRegular.Empty)
         {
             _dispatcher.Invoke(() =>
             {
                 if (priority >= _currentPriority && _islandVm.CurrentState != Models.IslandState.Expanded)
                 {
-                    if (_islandVm.CurrentState == Models.IslandState.Idle)
-                    {
-                        _originalTriggerText = _islandVm.TriggerText;
-                    }
-
                     _currentPriority = priority;
-                    _islandVm.TriggerText = text;
+                    _islandVm.NotificationText = text;
                     _islandVm.TriggerIcon = icon;
                     _islandVm.CurrentState = Models.IslandState.Triggered;
                     _collapseTimer.Stop();

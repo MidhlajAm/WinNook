@@ -9,5 +9,8 @@ namespace Project_Nook.Services
         void DeleteFromStorage(string storedPath);
         void OpenFile(string storedPath);
         void RevealInExplorer(string storedPath);
+
+        /// <summary>Total bytes the Shelf's managed copies currently occupy on disk.</summary>
+        long GetUsedBytes();
     }
 }

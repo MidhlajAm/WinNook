@@ -8,6 +8,9 @@ using System.Windows;
 using System.Collections.ObjectModel;
 using System.Linq;
 using Project_Nook.Models;
+using Project_Nook.Widgets;
+using System.ComponentModel;
+using System.Windows.Data;
 
 namespace Project_Nook.ViewModels
 {
@@ -20,6 +23,9 @@ namespace Project_Nook.ViewModels
 
         public IslandViewModel Island { get; }
 
+        /// <summary>Drives the Activity tab's widget list: toggles, ordering, and per-widget options.</summary>
+        public WidgetRegistry Widgets { get; }
+
         [ObservableProperty]
         private bool _isStartupEnabled;
 
@@ -29,18 +35,67 @@ namespace Project_Nook.ViewModels
         [ObservableProperty]
         private int _selectedOptionsTabIndex = 0;
 
-        [ObservableProperty]
-        private int _selectedDiveInTabIndex = 0;
-
         public ObservableCollection<AppItem> DiveInApps { get; } = new ObservableCollection<AppItem>();
 
-        public ControlCenterViewModel(IConfigurationService configurationService, IslandViewModel islandViewModel)
+        /// <summary>
+        /// Same scanned app list, filtered by the search box. Both the Dive In list and the Apps tab read
+        /// from it, so the expensive registry plus Start Menu scan happens once.
+        /// </summary>
+        public ICollectionView AppsView { get; }
+
+        [ObservableProperty]
+        private string _appSearchText = string.Empty;
+
+        partial void OnAppSearchTextChanged(string value) => AppsView?.Refresh();
+
+        /// <summary>False once the Quick Launch rail is full, which disables the remaining pin toggles.</summary>
+        public bool CanPinMore => QuickLaunch.CanPinMore;
+
+        public string PinCountLabel => $"{QuickLaunch.Apps.Count} of 6 pinned";
+
+        public QuickLaunchWidgetViewModel QuickLaunch { get; }
+
+        /// <summary>Exposed so the Options tab can bind the screenshot destination toggle.</summary>
+        public ScreenshotWidgetViewModel Screenshot { get; }
+
+        /// <summary>Exposed so the Options tab can bind the Shelf storage budget.</summary>
+        public ShelfViewModel Shelf { get; }
+
+        public ControlCenterViewModel(
+            IConfigurationService configurationService,
+            IslandViewModel islandViewModel,
+            WidgetRegistry widgets,
+            QuickLaunchWidgetViewModel quickLaunch,
+            ScreenshotWidgetViewModel screenshot,
+            ShelfViewModel shelf)
         {
             _configurationService = configurationService;
             Island = islandViewModel;
+            Widgets = widgets;
+            QuickLaunch = quickLaunch;
+            Screenshot = screenshot;
+            Shelf = shelf;
+
+            AppsView = CollectionViewSource.GetDefaultView(DiveInApps);
+            AppsView.Filter = FilterApp;
+
+            QuickLaunch.Apps.CollectionChanged += (s, e) =>
+            {
+                OnPropertyChanged(nameof(CanPinMore));
+                OnPropertyChanged(nameof(PinCountLabel));
+            };
+
             IsStartupEnabled = _configurationService.IsStartupEnabled;
-            IsMusicWidgetEnabled = _configurationService.IsMusicWidgetEnabled;
             LoadInstalledApps();
+        }
+
+        private bool FilterApp(object item)
+        {
+            if (string.IsNullOrWhiteSpace(AppSearchText)) return true;
+            if (item is not AppItem app) return false;
+
+            return app.DisplayName?.IndexOf(AppSearchText, StringComparison.OrdinalIgnoreCase) >= 0
+                || app.ExecutableName?.IndexOf(AppSearchText, StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
         [RelayCommand]
@@ -94,8 +149,10 @@ namespace Project_Nook.ViewModels
                                 {
                                     DisplayName = displayName,
                                     ExecutableName = exeName,
+                                    TargetPath = iconPath,
                                     IconImage = iconImage,
-                                    IsDiveInEnabled = savedApps.Contains(exeName, StringComparer.OrdinalIgnoreCase)
+                                    IsDiveInEnabled = savedApps.Contains(exeName, StringComparer.OrdinalIgnoreCase),
+                                    IsPinned = QuickLaunch.IsPinnedPath(iconPath)
                                 });
                             }
                         }
@@ -111,6 +168,7 @@ namespace Project_Nook.ViewModels
                 {
                     uniqueExes.Add(startApp.ExecutableName);
                     startApp.IsDiveInEnabled = savedApps.Contains(startApp.ExecutableName, StringComparer.OrdinalIgnoreCase);
+                    startApp.IsPinned = QuickLaunch.IsPinnedPath(startApp.TargetPath);
                     appsList.Add(startApp);
                 }
             }
@@ -145,20 +203,29 @@ namespace Project_Nook.ViewModels
             {
                 var enabledApps = DiveInApps.Where(a => a.IsDiveInEnabled).Select(a => a.ExecutableName).ToList();
                 _configurationService.SaveDiveInApps(enabledApps);
+                return;
+            }
+
+            if (e.PropertyName == nameof(AppItem.IsPinned) && sender is AppItem app)
+            {
+                if (app.IsPinned)
+                {
+                    // The rail holds six. If it is full, put the toggle back rather than silently ignoring it.
+                    if (!QuickLaunch.Pin(app.TargetPath, app.DisplayName)) app.IsPinned = false;
+                }
+                else
+                {
+                    QuickLaunch.UnpinPath(app.TargetPath);
+                }
+
+                OnPropertyChanged(nameof(CanPinMore));
+                OnPropertyChanged(nameof(PinCountLabel));
             }
         }
 
         partial void OnIsStartupEnabledChanged(bool value)
         {
             _configurationService.IsStartupEnabled = value;
-        }
-
-        [ObservableProperty]
-        private bool _isMusicWidgetEnabled;
-
-        partial void OnIsMusicWidgetEnabledChanged(bool value)
-        {
-            _configurationService.IsMusicWidgetEnabled = value;
         }
 
         [RelayCommand]

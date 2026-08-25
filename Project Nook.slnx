@@ -1,7 +1,9 @@
 <Solution>
+  <!-- x64 first: a bare "dotnet build" takes the first platform listed, and ARM64 leading here meant
+       the default build produced an ARM64 binary that will not run on an x64 machine. -->
   <Configurations>
-    <Platform Name="ARM64" />
     <Platform Name="x64" />
+    <Platform Name="ARM64" />
     <Platform Name="x86" />
   </Configurations>
   <Project Path="Project Nook.csproj">

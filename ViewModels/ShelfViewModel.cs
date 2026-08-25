@@ -2,15 +2,37 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Project_Nook.Models;
 using Project_Nook.Services;
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Project_Nook.ViewModels
 {
+    /// <summary>A selectable Shelf storage budget.</summary>
+    public class ShelfLimitOption
+    {
+        public string Label { get; init; }
+        public int Megabytes { get; init; }
+        public override string ToString() => Label;
+    }
+
     public partial class ShelfViewModel : ObservableObject
     {
+        private const string LimitSettingKey = "ShelfSizeLimitMb";
+
+        /// <summary>
+        /// 2 GB. Big enough to be invisible for normal use — documents, images, the odd video — and small
+        /// enough to stay polite on a modest SSD. The Shelf is a scratch area, not an archive.
+        /// </summary>
+        private const int DefaultLimitMb = 2048;
+
         private readonly IShelfService _shelfService;
         private readonly IStorageService _storageService;
+        private readonly IConfigurationService _config;
+        private readonly Func<TriggerEngine> _triggerEngine;
 
         public ObservableCollection<ShelfItem> Items { get; } = new();
 
@@ -22,13 +44,84 @@ namespace Project_Nook.ViewModels
             CloseShelfAction?.Invoke();
         }
 
-        public ShelfViewModel(IShelfService shelfService, IStorageService storageService)
+        public ShelfViewModel(
+            IShelfService shelfService,
+            IStorageService storageService,
+            IConfigurationService config,
+            Func<TriggerEngine> triggerEngine)
         {
             _shelfService = shelfService;
             _storageService = storageService;
-            
+            _config = config;
+            _triggerEngine = triggerEngine;
+
             LoadItemsAsync().ConfigureAwait(false);
         }
+
+        public IReadOnlyList<ShelfLimitOption> LimitOptions { get; } = new List<ShelfLimitOption>
+        {
+            new() { Label = "512 MB", Megabytes = 512 },
+            new() { Label = "1 GB", Megabytes = 1024 },
+            new() { Label = "2 GB (recommended)", Megabytes = DefaultLimitMb },
+            new() { Label = "5 GB", Megabytes = 5120 },
+            new() { Label = "10 GB", Megabytes = 10240 },
+            new() { Label = "Unlimited", Megabytes = 0 }
+        };
+
+        public int LimitMb
+        {
+            get
+            {
+                var raw = _config.GetSetting(LimitSettingKey);
+                return int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var mb) && mb >= 0
+                    ? mb
+                    : DefaultLimitMb;
+            }
+        }
+
+        private long LimitBytes => LimitMb <= 0 ? long.MaxValue : (long)LimitMb * 1024 * 1024;
+
+        public ShelfLimitOption SelectedLimit
+        {
+            get
+            {
+                int current = LimitMb;
+                return LimitOptions.FirstOrDefault(o => o.Megabytes == current) ?? LimitOptions[2];
+            }
+            set
+            {
+                if (value == null || value.Megabytes == LimitMb) return;
+
+                _config.SetSetting(LimitSettingKey, value.Megabytes.ToString(CultureInfo.InvariantCulture));
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(UsageLabel));
+            }
+        }
+
+        /// <summary>"1.2 GB of 2 GB used", for the Control Center.</summary>
+        public string UsageLabel
+        {
+            get
+            {
+                long used = _storageService.GetUsedBytes();
+                return LimitMb <= 0
+                    ? $"{FormatSize(used)} used"
+                    : $"{FormatSize(used)} of {FormatSize(LimitBytes)} used";
+            }
+        }
+
+        public void RefreshUsage() => OnPropertyChanged(nameof(UsageLabel));
+
+        private static string FormatSize(long bytes)
+        {
+            if (bytes >= 1024L * 1024 * 1024) return $"{bytes / 1024d / 1024d / 1024d:0.#} GB";
+            if (bytes >= 1024L * 1024) return $"{bytes / 1024d / 1024d:0} MB";
+            if (bytes >= 1024) return $"{bytes / 1024d:0} KB";
+            return $"{bytes} B";
+        }
+
+        private void Warn(string message) =>
+            _triggerEngine()?.Trigger(4, message, Wpf.Ui.Controls.SymbolRegular.Warning24);
 
         public async Task LoadItemsAsync()
         {
@@ -66,17 +159,26 @@ namespace Project_Nook.ViewModels
         {
             if (item != null)
             {
-                if (!string.IsNullOrEmpty(item.StoredPath))
+                // A folder entry points at the user's real directory, so removing it from the Shelf must
+                // only drop the reference. Deleting managed storage is for copies we made ourselves.
+                if (!string.IsNullOrEmpty(item.StoredPath) && item.Type != "Folder")
                 {
                     _storageService.DeleteFromStorage(item.StoredPath);
                 }
                 await _shelfService.DeleteItemAsync(item);
                 Items.Remove(item);
+                RefreshUsage();
             }
         }
 
         public async Task AddDroppedFileAsync(string filePath)
         {
+            if (System.IO.Directory.Exists(filePath))
+            {
+                await AddDroppedFolderAsync(filePath);
+                return;
+            }
+
             if (!System.IO.File.Exists(filePath)) return;
 
             var fileInfo = new System.IO.FileInfo(filePath);
@@ -94,6 +196,8 @@ namespace Project_Nook.ViewModels
                 }
             }
 
+            if (!HasRoomFor(fileInfo.Length, fileInfo.Name)) return;
+
             var storedPath = await _storageService.CopyFileToStorageAsync(filePath);
             if (storedPath != null)
             {
@@ -106,7 +210,64 @@ namespace Project_Nook.ViewModels
                 };
                 await _shelfService.SaveItemAsync(item);
                 System.Windows.Application.Current.Dispatcher.Invoke(() => Items.Insert(0, item));
+                RefreshUsage();
             }
+        }
+
+        /// <summary>
+        /// Refuses a copy that would blow the storage budget, and says why in the notch rather than
+        /// failing silently. Folders and text snippets skip this: folders are stored by reference and
+        /// cost nothing, and a snippet cannot meaningfully move the needle.
+        /// </summary>
+        private bool HasRoomFor(long incomingBytes, string name)
+        {
+            long limit = LimitBytes;
+            if (limit == long.MaxValue) return true;
+
+            if (incomingBytes > limit)
+            {
+                Warn($"{name} is larger than the Shelf limit");
+                return false;
+            }
+
+            if (_storageService.GetUsedBytes() + incomingBytes > limit)
+            {
+                Warn("Shelf is full - remove some items");
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Folders are recorded by reference rather than copied. The Shelf advertises folder support, but
+        /// deep-copying a dropped folder could duplicate gigabytes without warning, and a shortcut is what
+        /// people actually want from a shelf anyway.
+        /// </summary>
+        private async Task AddDroppedFolderAsync(string folderPath)
+        {
+            var info = new System.IO.DirectoryInfo(folderPath);
+
+            foreach (var existing in Items)
+            {
+                if (existing.Type == "Folder" &&
+                    string.Equals(existing.StoredPath, folderPath, System.StringComparison.OrdinalIgnoreCase))
+                {
+                    return;
+                }
+            }
+
+            var item = new ShelfItem
+            {
+                Type = "Folder",
+                OriginalName = info.Name,
+                Content = folderPath,
+                StoredPath = folderPath,
+                CreatedAt = System.DateTime.Now
+            };
+
+            await _shelfService.SaveItemAsync(item);
+            System.Windows.Application.Current.Dispatcher.Invoke(() => Items.Insert(0, item));
         }
 
         public async Task AddDroppedTextAsync(string text)

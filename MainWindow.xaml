@@ -5,8 +5,10 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     Title="WinNook"
-    Height="800" Width="900"
-    ResizeMode="NoResize"
+    Icon="pack://application:,,,/Assets/winnook.ico"
+    Height="800" Width="920"
+    MinHeight="560" MinWidth="720"
+    ResizeMode="CanResize"
     WindowBackdropType="Mica"
     ExtendsContentIntoTitleBar="True">
 
@@ -20,7 +22,18 @@
         <ui:TitleBar Title="WinNook Control Center" Grid.Row="0" Foreground="White" />
 
         <Border Grid.Row="1" Background="#282C34" BorderBrush="#333" BorderThickness="0,0,0,1">
-            <ListBox x:Name="DockListBox" SelectedIndex="{Binding ViewModel.SelectedTabIndex}" HorizontalAlignment="Center" Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" ClipToBounds="False">
+            <Grid>
+                <!-- The dock stays centred; the lockup sits in the margin it was already leaving empty. -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center"
+                            Margin="24,0,0,0">
+                    <Image Source="{StaticResource WinNookMark}" Width="32" Height="32" Margin="0,0,10,0"
+                           RenderOptions.BitmapScalingMode="HighQuality" />
+                    <TextBlock Style="{StaticResource BrandWordmark}">
+                        <Run Text="Win" /><Run Text="Nook" Foreground="#4CC2FF" />
+                    </TextBlock>
+                </StackPanel>
+
+                <ListBox x:Name="DockListBox" SelectedIndex="{Binding ViewModel.SelectedTabIndex}" HorizontalAlignment="Center" Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" ClipToBounds="False">
                 <ListBox.ItemsPanel>
                     <ItemsPanelTemplate>
                         <StackPanel Orientation="Horizontal" Background="Transparent" ClipToBounds="False" />
@@ -92,8 +105,8 @@
                 </ListBoxItem>
                 <ListBoxItem>
                     <StackPanel>
-                        <ui:SymbolIcon Symbol="Library24" FontSize="28" HorizontalAlignment="Center" />
-                        <TextBlock Text="Shelf" Margin="0,8,0,0" HorizontalAlignment="Center" FontSize="12" />
+                        <ui:SymbolIcon Symbol="Rocket24" FontSize="28" HorizontalAlignment="Center" />
+                        <TextBlock Text="Apps" Margin="0,8,0,0" HorizontalAlignment="Center" FontSize="12" />
                     </StackPanel>
                 </ListBoxItem>
                 <ListBoxItem>
@@ -108,7 +121,8 @@
                         <TextBlock Text="Developer" Margin="0,8,0,0" HorizontalAlignment="Center" FontSize="12" />
                     </StackPanel>
                 </ListBoxItem>
-            </ListBox>
+                </ListBox>
+            </Grid>
         </Border>
 
         <TabControl Grid.Row="2" Background="Transparent" BorderThickness="0" Margin="0,16,0,0" HorizontalAlignment="Center" SelectedIndex="{Binding ViewModel.SelectedTabIndex}" SelectionChanged="TabControl_SelectionChanged">
@@ -122,11 +136,48 @@
 
             <!-- APPEARANCE TAB (Index 1) -->
             <TabItem>
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0">
-                    <StackPanel HorizontalAlignment="Center" Width="400">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0" Padding="0,0,16,0">
+                    <StackPanel HorizontalAlignment="Center" Width="560">
                         <Grid Margin="0,0,0,24">
-                            <TextBlock Text="Notch Appearance" FontSize="20" FontWeight="SemiBold" HorizontalAlignment="Center" Foreground="White"/>
+                            <TextBlock Text="Notch Appearance" Style="{StaticResource SectionHeader}" />
                             <ui:Button Content="Reset Default" HorizontalAlignment="Right" VerticalAlignment="Center" Command="{Binding ViewModel.Island.RestoreDefaultsCommand}" />
+                        </Grid>
+
+                        <!-- Two shapes, one engine. Nook fuses to the screen edge; Dynamic Island floats
+                             clear of it. Each button just sets the sliders below, so either can be tweaked
+                             afterwards. -->
+                        <Border Style="{StaticResource SettingsCard}">
+                            <StackPanel>
+                                <TextBlock Text="Notch Style" Style="{StaticResource SettingLabel}" />
+                                <TextBlock Text="A starting point for the sliders below. Nook sits flush against the screen edge; Dynamic Island floats free as a rounded pill."
+                                           Style="{StaticResource SettingDescription}" Margin="0,3,0,10" />
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <ui:Button Grid.Column="0" Content="Nook (default)" Margin="0,0,6,0"
+                                               HorizontalAlignment="Stretch"
+                                               Command="{Binding ViewModel.Island.ApplyNookStyleCommand}" />
+                                    <ui:Button Grid.Column="1" Content="Dynamic Island" Margin="6,0,0,0"
+                                               HorizontalAlignment="Stretch"
+                                               Command="{Binding ViewModel.Island.ApplyDynamicIslandStyleCommand}" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <Grid Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="150" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Top Offset" Style="{StaticResource SettingLabel}"
+                                       ToolTip="0 sits flush against the screen edge. Above 0 floats it free, Dynamic Island style, and rounds all four corners." />
+                            <Slider Grid.Column="1" VerticalAlignment="Center" Minimum="0" Maximum="40"
+                                    Value="{Binding ViewModel.Island.TopOffset}" />
+                            <TextBlock Grid.Column="2" Text="{Binding ViewModel.Island.TopOffset, StringFormat={}{0:F0}}"
+                                       Style="{StaticResource SettingValue}" />
                         </Grid>
 
                         <Grid Margin="0,0,0,16">
@@ -134,7 +185,8 @@
                                 <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="Inverted Curves" VerticalAlignment="Center" Foreground="White" />
+                            <TextBlock Text="Inverted Curves" Style="{StaticResource SettingLabel}"
+                                       ToolTip="Blends the notch into the screen edge. Only meaningful when Top Offset is 0." />
                             <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding ViewModel.Island.EnableFillets}" HorizontalAlignment="Right" />
                         </Grid>
 
@@ -146,10 +198,10 @@
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="Fillet Radius" VerticalAlignment="Center" Foreground="White" />
                             <Slider Grid.Column="1" Minimum="0" Maximum="40" Value="{Binding ViewModel.Island.FilletRadius, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" />
-                            <TextBlock Grid.Column="2" Text="{Binding ViewModel.Island.FilletRadius, StringFormat={}{0:F0}}" VerticalAlignment="Center" Foreground="#AAA" TextAlignment="Right" />
+                            <TextBlock Grid.Column="2" Text="{Binding ViewModel.Island.FilletRadius, StringFormat={}{0:F0}}" Style="{StaticResource SettingValue}" />
                         </Grid>
 
-                        <TextBlock Text="Idle State" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,16" Foreground="#AAA"/>
+                        <TextBlock Text="Idle State" Style="{StaticResource SubSectionHeader}" />
 
                         <Grid Margin="0,0,0,16">
                             <Grid.ColumnDefinitions>
@@ -159,7 +211,7 @@
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="Width" VerticalAlignment="Center" Foreground="White" />
                             <Slider Grid.Column="1" Minimum="100" Maximum="500" Value="{Binding ViewModel.Island.IdleWidth, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" />
-                            <TextBlock Grid.Column="2" Text="{Binding ViewModel.Island.IdleWidth, StringFormat={}{0:F0}}" VerticalAlignment="Center" Foreground="#AAA" TextAlignment="Right" />
+                            <TextBlock Grid.Column="2" Text="{Binding ViewModel.Island.IdleWidth, StringFormat={}{0:F0}}" Style="{StaticResource SettingValue}" />
                         </Grid>
 
                         <Grid Margin="0,0,0,16">
@@ -170,7 +222,7 @@
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="Height" VerticalAlignment="Center" Foreground="White" />
                             <Slider Grid.Column="1" Minimum="20" Maximum="100" Value="{Binding ViewModel.Island.IdleHeight, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" />
-                            <TextBlock Grid.Column="2" Text="{Binding ViewModel.Island.IdleHeight, StringFormat={}{0:F0}}" VerticalAlignment="Center" Foreground="#AAA" TextAlignment="Right" />
+                            <TextBlock Grid.Column="2" Text="{Binding ViewModel.Island.IdleHeight, StringFormat={}{0:F0}}" Style="{StaticResource SettingValue}" />
                         </Grid>
 
                         <Grid Margin="0,0,0,16">
@@ -181,7 +233,7 @@
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="Corner Radius" VerticalAlignment="Center" Foreground="White" />
                             <Slider Grid.Column="1" Minimum="0" Maximum="50" Value="{Binding ViewModel.Island.CornerRadius, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" />
-                            <TextBlock Grid.Column="2" Text="{Binding ViewModel.Island.CornerRadius, StringFormat={}{0:F0}}" VerticalAlignment="Center" Foreground="#AAA" TextAlignment="Right" />
+                            <TextBlock Grid.Column="2" Text="{Binding ViewModel.Island.CornerRadius, StringFormat={}{0:F0}}" Style="{StaticResource SettingValue}" />
                         </Grid>
 
 
@@ -196,7 +248,7 @@
                             <ui:Button Grid.Column="2" Content="Pick" Click="PickNotchColor_Click" />
                         </Grid>
 
-                        <TextBlock Text="Hover State" FontSize="16" FontWeight="SemiBold" Margin="0,16,0,16" Foreground="#AAA"/>
+                        <TextBlock Text="Hover State" Style="{StaticResource SubSectionHeader}" />
 
                         <Grid Margin="0,0,0,16">
                             <Grid.ColumnDefinitions>
@@ -206,7 +258,7 @@
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="Hover Width" VerticalAlignment="Center" Foreground="White" />
                             <Slider Grid.Column="1" Minimum="100" Maximum="600" Value="{Binding ViewModel.Island.HoverWidth, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" />
-                            <TextBlock Grid.Column="2" Text="{Binding ViewModel.Island.HoverWidth, StringFormat={}{0:F0}}" VerticalAlignment="Center" Foreground="#AAA" TextAlignment="Right" />
+                            <TextBlock Grid.Column="2" Text="{Binding ViewModel.Island.HoverWidth, StringFormat={}{0:F0}}" Style="{StaticResource SettingValue}" />
                         </Grid>
 
                         <Grid Margin="0,0,0,16">
@@ -217,7 +269,7 @@
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="Hover Height" VerticalAlignment="Center" Foreground="White" />
                             <Slider Grid.Column="1" Minimum="20" Maximum="200" Value="{Binding ViewModel.Island.HoverHeight, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" />
-                            <TextBlock Grid.Column="2" Text="{Binding ViewModel.Island.HoverHeight, StringFormat={}{0:F0}}" VerticalAlignment="Center" Foreground="#AAA" TextAlignment="Right" />
+                            <TextBlock Grid.Column="2" Text="{Binding ViewModel.Island.HoverHeight, StringFormat={}{0:F0}}" Style="{StaticResource SettingValue}" />
                         </Grid>
 
                         <Grid Margin="0,0,0,16">
@@ -228,7 +280,31 @@
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="Hover Corner Radius" VerticalAlignment="Center" Foreground="White" />
                             <Slider Grid.Column="1" Minimum="0" Maximum="50" Value="{Binding ViewModel.Island.HoverCornerRadius, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" />
-                            <TextBlock Grid.Column="2" Text="{Binding ViewModel.Island.HoverCornerRadius, StringFormat={}{0:F0}}" VerticalAlignment="Center" Foreground="#AAA" TextAlignment="Right" />
+                            <TextBlock Grid.Column="2" Text="{Binding ViewModel.Island.HoverCornerRadius, StringFormat={}{0:F0}}" Style="{StaticResource SettingValue}" />
+                        </Grid>
+
+                        <TextBlock Text="Expanded State" Style="{StaticResource SubSectionHeader}" />
+
+                        <Grid Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="150" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="30" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Expanded Width" VerticalAlignment="Center" Foreground="White" />
+                            <Slider Grid.Column="1" Minimum="200" Maximum="1000" Value="{Binding ViewModel.Island.ExpandedWidth, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="2" Text="{Binding ViewModel.Island.ExpandedWidth, StringFormat={}{0:F0}}" Style="{StaticResource SettingValue}" />
+                        </Grid>
+
+                        <Grid Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="150" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="30" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Expanded Height" VerticalAlignment="Center" Foreground="White" />
+                            <Slider Grid.Column="1" Minimum="50" Maximum="500" Value="{Binding ViewModel.Island.ExpandedHeight, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="2" Text="{Binding ViewModel.Island.ExpandedHeight, StringFormat={}{0:F0}}" Style="{StaticResource SettingValue}" />
                         </Grid>
 
                         <Grid Margin="0,0,0,16">
@@ -239,7 +315,18 @@
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="Expanded Corner Rad." VerticalAlignment="Center" Foreground="White" />
                             <Slider Grid.Column="1" Minimum="0" Maximum="50" Value="{Binding ViewModel.Island.ExpandedCornerRadius, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" />
-                            <TextBlock Grid.Column="2" Text="{Binding ViewModel.Island.ExpandedCornerRadius, StringFormat={}{0:F0}}" VerticalAlignment="Center" Foreground="#AAA" TextAlignment="Right" />
+                            <TextBlock Grid.Column="2" Text="{Binding ViewModel.Island.ExpandedCornerRadius, StringFormat={}{0:F0}}" Style="{StaticResource SettingValue}" />
+                        </Grid>
+
+                        <Grid Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="150" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="30" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Expanded Fillet Rad." VerticalAlignment="Center" Foreground="White" />
+                            <Slider Grid.Column="1" Minimum="0" Maximum="40" Value="{Binding ViewModel.Island.ExpandedFilletRadius, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="2" Text="{Binding ViewModel.Island.ExpandedFilletRadius, StringFormat={}{0:F0}}" Style="{StaticResource SettingValue}" />
                         </Grid>
 
                         <Grid Margin="0,0,0,16">
@@ -258,35 +345,52 @@
 
             <!-- EFFECTS TAB (Index 2) -->
             <TabItem>
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0">
-                    <StackPanel HorizontalAlignment="Center" Width="400">
-                        <TextBlock Text="Shadows &amp; Animation" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,24" HorizontalAlignment="Center" Foreground="White"/>
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0" Padding="0,0,16,0">
+                    <StackPanel HorizontalAlignment="Center" Width="560">
+                        <TextBlock Text="Shadows &amp; Animation" Style="{StaticResource SectionHeader}" />
 
                         <Grid Margin="0,0,0,16">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="Anim Speed (ms)" VerticalAlignment="Center" Foreground="White" />
-                            <Slider Grid.Column="1" Minimum="100" Maximum="2000" Value="{Binding ViewModel.Island.AnimationSpeedMs}" />
+                            <TextBlock Text="Anim Speed" Style="{StaticResource SettingLabel}" />
+                            <Slider Grid.Column="1" VerticalAlignment="Center" Minimum="100" Maximum="2000" Value="{Binding ViewModel.Island.AnimationSpeedMs}" />
+                            <TextBlock Grid.Column="2" Text="{Binding ViewModel.Island.AnimationSpeedMs, StringFormat={}{0:F0} ms}" Style="{StaticResource SettingValue}" />
                         </Grid>
 
                         <Grid Margin="0,0,0,16">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="Shadow Blur" VerticalAlignment="Center" Foreground="White" />
-                            <Slider Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding ViewModel.Island.ShadowBlurRadius}" />
+                            <TextBlock Text="Shadow Blur" Style="{StaticResource SettingLabel}" />
+                            <Slider Grid.Column="1" VerticalAlignment="Center" Minimum="0" Maximum="100" Value="{Binding ViewModel.Island.ShadowBlurRadius}" />
+                            <TextBlock Grid.Column="2" Text="{Binding ViewModel.Island.ShadowBlurRadius, StringFormat={}{0:F0}}" Style="{StaticResource SettingValue}" />
                         </Grid>
 
                         <Grid Margin="0,0,0,16">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="Shadow Opacity" VerticalAlignment="Center" Foreground="White" />
-                            <Slider Grid.Column="1" Minimum="0" Maximum="1" Value="{Binding ViewModel.Island.ShadowOpacity}" SmallChange="0.1" LargeChange="0.2" TickFrequency="0.1" />
+                            <TextBlock Text="Shadow Opacity" Style="{StaticResource SettingLabel}" />
+                            <Slider Grid.Column="1" VerticalAlignment="Center" Minimum="0" Maximum="1" Value="{Binding ViewModel.Island.ShadowOpacity}" SmallChange="0.05" LargeChange="0.1" TickFrequency="0.05" />
+                            <TextBlock Grid.Column="2" Text="{Binding ViewModel.Island.ShadowOpacity, StringFormat={}{0:P0}}" Style="{StaticResource SettingValue}" />
+                        </Grid>
+
+                        <Grid Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="150" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Shadow Depth" Style="{StaticResource SettingLabel}" />
+                            <Slider Grid.Column="1" VerticalAlignment="Center" Minimum="0" Maximum="40" Value="{Binding ViewModel.Island.ShadowDepth}" />
+                            <TextBlock Grid.Column="2" Text="{Binding ViewModel.Island.ShadowDepth, StringFormat={}{0:F0}}" Style="{StaticResource SettingValue}" />
                         </Grid>
 
                         <Grid Margin="0,0,0,16">
@@ -316,53 +420,137 @@
 
             <!-- ACTIVITY TAB (Index 3) -->
             <TabItem>
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0">
-                    <StackPanel HorizontalAlignment="Center" Width="400">
-                        <TextBlock Text="Widget Settings" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,24" HorizontalAlignment="Center" Foreground="White"/>
-                        
-                        <Border Background="#1AFFFFFF" CornerRadius="8" Padding="16" Margin="0,0,0,32" HorizontalAlignment="Stretch">
-                            <Grid HorizontalAlignment="Stretch">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,0">
-                                    <TextBlock Text="Music Widget" FontSize="16" FontWeight="SemiBold" Foreground="White" />
-                                    <TextBlock Text="Show media playback and controls in the Notch." Foreground="#888" Margin="0,4,0,0" TextWrapping="Wrap" />
-                                </StackPanel>
-                                <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding ViewModel.IsMusicWidgetEnabled}" VerticalAlignment="Center" />
-                            </Grid>
-                        </Border>
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0" Padding="0,0,16,0">
+                    <StackPanel HorizontalAlignment="Center" Width="560">
+                        <TextBlock Text="Widget Settings" Style="{StaticResource SectionHeader}" />
+                        <TextBlock Text="Turn widgets on or off, and set the order they appear in the expanded Notch."
+                                   Foreground="#888" TextWrapping="Wrap" TextAlignment="Center" Margin="0,0,0,24" />
 
-                        <TextBlock Text="Live Preview Control" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,24" HorizontalAlignment="Center" Foreground="White"/>
-                        <TextBlock Text="Manually test the states of the Notch without triggering system events." TextWrapping="Wrap" Margin="0,0,0,24" HorizontalAlignment="Center" TextAlignment="Center" Foreground="White" />
-                        
-                        <Grid Margin="0,0,0,16">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-                            
-                            <ui:Button Content="Hover Mode" Command="{Binding ViewModel.HoverIslandCommand}" Margin="4" HorizontalAlignment="Stretch" />
-                            <ui:Button Grid.Column="1" Content="Idle Mode" Command="{Binding ViewModel.UnhoverIslandCommand}" Margin="4" HorizontalAlignment="Stretch" />
-                            
-                            <ui:Button Grid.Row="1" Content="Expand (Shelf)" Command="{Binding ViewModel.ExpandIslandCommand}" Margin="4" HorizontalAlignment="Stretch" />
-                            <ui:Button Grid.Row="1" Grid.Column="1" Content="Collapse" Command="{Binding ViewModel.CollapseIslandCommand}" Margin="4" HorizontalAlignment="Stretch" />
-                        </Grid>
+                        <!-- One row per registered widget. The list comes straight from the widget registry,
+                             so a new widget shows up here with no changes to this file. -->
+                        <ItemsControl ItemsSource="{Binding ViewModel.Widgets.Slots}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Style="{StaticResource SettingsCard}">
+                                        <Grid HorizontalAlignment="Stretch">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <ui:SymbolIcon Grid.Column="0" Symbol="{Binding Icon}" FontSize="20" Foreground="White"
+                                                           VerticalAlignment="Center" Margin="0,0,12,0" />
+
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,12,0">
+                                                <TextBlock Text="{Binding DisplayName}" FontSize="15" FontWeight="SemiBold" Foreground="White" />
+                                                <TextBlock Text="{Binding Description}" Foreground="#888" FontSize="12" Margin="0,2,0,0" TextWrapping="Wrap" />
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Column="2" Orientation="Vertical" VerticalAlignment="Center" Margin="0,0,12,0">
+                                                <!-- Icon is an IconElement, not a string: set it as an
+                                                     element or the button renders empty. -->
+                                                <ui:Button Padding="6,2" Margin="0,0,0,2" ToolTip="Move earlier"
+                                                           Command="{Binding DataContext.ViewModel.Widgets.MoveUpCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                           CommandParameter="{Binding}">
+                                                    <ui:Button.Icon>
+                                                        <ui:SymbolIcon Symbol="ArrowUp24" FontSize="14" Foreground="White" />
+                                                    </ui:Button.Icon>
+                                                </ui:Button>
+                                                <ui:Button Padding="6,2" ToolTip="Move later"
+                                                           Command="{Binding DataContext.ViewModel.Widgets.MoveDownCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                           CommandParameter="{Binding}">
+                                                    <ui:Button.Icon>
+                                                        <ui:SymbolIcon Symbol="ArrowDown24" FontSize="14" Foreground="White" />
+                                                    </ui:Button.Icon>
+                                                </ui:Button>
+                                            </StackPanel>
+
+                                            <ui:ToggleSwitch Grid.Column="3" IsChecked="{Binding IsEnabled}" VerticalAlignment="Center" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
 
             <!-- SHELF TAB (Index 4) -->
             <TabItem>
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0">
-                    <StackPanel HorizontalAlignment="Center" Width="400">
-                        <TextBlock Text="Shelf Settings" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,24" HorizontalAlignment="Center" Foreground="White"/>
-                        <TextBlock Text="More shelf configuration options coming soon!" Foreground="White" HorizontalAlignment="Center"/>
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0" Padding="0,0,16,0">
+                    <StackPanel HorizontalAlignment="Center" Width="560">
+                        <TextBlock Text="Quick Launch" Style="{StaticResource SectionHeader}" />
+                        <TextBlock Text="Pick the apps you want in the Notch. Turn on the Quick Launch widget in Activity to see them."
+                                   Foreground="#888" TextWrapping="Wrap" TextAlignment="Center" Margin="0,0,0,16" />
+
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ui:TextBox Grid.Column="0" Text="{Binding ViewModel.AppSearchText, UpdateSourceTrigger=PropertyChanged}"
+                                        PlaceholderText="Search installed apps" Foreground="White" Margin="0,0,12,0" />
+                            <TextBlock Grid.Column="1" Text="{Binding ViewModel.PinCountLabel}" Foreground="#888"
+                                       FontSize="12" VerticalAlignment="Center" />
+                        </Grid>
+
+                        <!-- Same scanned list the Dive In tab uses, so the registry and Start Menu sweep
+                             only happens once per session. -->
+                        <ItemsControl ItemsSource="{Binding ViewModel.AppsView}" MaxHeight="420">
+                            <ItemsControl.Template>
+                                <ControlTemplate TargetType="ItemsControl">
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,8,0">
+                                        <ItemsPresenter />
+                                    </ScrollViewer>
+                                </ControlTemplate>
+                            </ItemsControl.Template>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Style="{StaticResource SettingsCard}">
+                                        <Grid HorizontalAlignment="Stretch">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <Image Grid.Column="0" Source="{Binding IconImage}" Width="24" Height="24"
+                                                   VerticalAlignment="Center" Margin="0,0,12,0"
+                                                   RenderOptions.BitmapScalingMode="HighQuality" />
+
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,12,0">
+                                                <TextBlock Text="{Binding DisplayName}" Foreground="White" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="{Binding ExecutableName}" Foreground="#888" FontSize="11" />
+                                            </StackPanel>
+
+                                            <ui:ToggleSwitch Grid.Column="2" IsChecked="{Binding IsPinned}" VerticalAlignment="Center">
+                                                <ui:ToggleSwitch.Style>
+                                                    <!-- BasedOn is required: an explicit Style replaces the
+                                                         theme default outright, and the switch loses its
+                                                         template and renders as a tiny blob. -->
+                                                    <Style TargetType="ui:ToggleSwitch" BasedOn="{StaticResource {x:Type ui:ToggleSwitch}}">
+                                                        <Style.Triggers>
+                                                            <!-- Rail is full: leave the pinned ones usable so they
+                                                                 can still be turned off, grey out the rest. -->
+                                                            <MultiDataTrigger>
+                                                                <MultiDataTrigger.Conditions>
+                                                                    <Condition Binding="{Binding IsPinned}" Value="False" />
+                                                                    <Condition Binding="{Binding DataContext.ViewModel.CanPinMore, RelativeSource={RelativeSource AncestorType=ItemsControl}}" Value="False" />
+                                                                </MultiDataTrigger.Conditions>
+                                                                <Setter Property="IsEnabled" Value="False" />
+                                                            </MultiDataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </ui:ToggleSwitch.Style>
+                                            </ui:ToggleSwitch>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
@@ -378,7 +566,7 @@
                     
                     <!-- Left Sidebar -->
                     <StackPanel Grid.Column="0">
-                        <TextBlock Text="OPTIONS" FontSize="12" FontWeight="SemiBold" Foreground="#888" Margin="0,0,0,16" HorizontalAlignment="Center" />
+                        <TextBlock Text="OPTIONS" Style="{StaticResource SubSectionHeader}" />
                         <ListBox SelectedIndex="{Binding ViewModel.SelectedOptionsTabIndex}" Background="Transparent" BorderThickness="0" HorizontalAlignment="Center">
                             <ListBox.ItemContainerStyle>
                                 <Style TargetType="ListBoxItem">
@@ -446,11 +634,11 @@
 
                         <!-- General (Index 0) -->
                         <TabItem>
-                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,16,0">
                                 <StackPanel>
-                                    <TextBlock Text="General Settings" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,24" Foreground="White"/>
+                                    <TextBlock Text="General Settings" Style="{StaticResource SectionHeader}" />
                                     
-                                    <Border Background="#1AFFFFFF" CornerRadius="8" Padding="16" Margin="0,0,0,16" HorizontalAlignment="Stretch">
+                                    <Border Style="{StaticResource SettingsCard}">
                                         <Grid HorizontalAlignment="Stretch">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*" />
@@ -461,7 +649,7 @@
                                         </Grid>
                                     </Border>
                                     
-                                    <Border Background="#1AFFFFFF" CornerRadius="8" Padding="16" Margin="0,0,0,16" HorizontalAlignment="Stretch">
+                                    <Border Style="{StaticResource SettingsCard}">
                                         <Grid HorizontalAlignment="Stretch">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*" />
@@ -471,8 +659,57 @@
                                             <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding ViewModel.Island.IsIslandEnabled}" VerticalAlignment="Center" />
                                         </Grid>
                                     </Border>
+
+                                    <Border Style="{StaticResource SettingsCard}">
+                                        <Grid HorizontalAlignment="Stretch">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,0">
+                                                <TextBlock Text="Close on Outside Click" Foreground="White" />
+                                                <TextBlock Text="On: clicking inside the expanded Notch is left to the widgets, and it closes when you click away. Off: clicking anywhere inside closes it."
+                                                           Foreground="#888" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap" />
+                                            </StackPanel>
+                                            <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding ViewModel.Island.CollapseOnOutsideClick}" VerticalAlignment="Center" />
+                                        </Grid>
+                                    </Border>
+
+                                    <Border Style="{StaticResource SettingsCard}">
+                                        <Grid HorizontalAlignment="Stretch">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,0">
+                                                <TextBlock Text="Save Screenshots to Shelf" Foreground="White" />
+                                                <TextBlock Text="Off: captures go to Pictures\Screenshots, where Windows puts them. On: they go into the Notch's Shelf instead."
+                                                           Foreground="#888" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap" />
+                                            </StackPanel>
+                                            <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding ViewModel.Screenshot.SaveToShelf}" VerticalAlignment="Center" />
+                                        </Grid>
+                                    </Border>
+
+                                    <Border Style="{StaticResource SettingsCard}">
+                                        <Grid HorizontalAlignment="Stretch">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,0">
+                                                <TextBlock Text="Shelf Storage Limit" Style="{StaticResource SettingLabel}" />
+                                                <TextBlock Text="{Binding ViewModel.Shelf.UsageLabel}" Style="{StaticResource SettingDescription}" />
+                                                <TextBlock Text="Dropped files are copied into the Shelf. Past this budget new drops are refused instead of quietly filling the disk."
+                                                           Style="{StaticResource SettingDescription}" />
+                                            </StackPanel>
+                                            <ComboBox Grid.Column="1" VerticalAlignment="Center" MinWidth="150"
+                                                      ItemsSource="{Binding ViewModel.Shelf.LimitOptions}"
+                                                      SelectedItem="{Binding ViewModel.Shelf.SelectedLimit, Mode=TwoWay}"
+                                                      DisplayMemberPath="Label" />
+                                        </Grid>
+                                    </Border>
                                     
-                                    <Border Background="#1AFFFFFF" CornerRadius="8" Padding="16" Margin="0,0,0,16" HorizontalAlignment="Stretch">
+                                    <Border Style="{StaticResource SettingsCard}">
                                         <Grid HorizontalAlignment="Stretch">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*" />
@@ -496,119 +733,60 @@
                                 </Grid.RowDefinitions>
                                 
                                 <StackPanel Grid.Row="0" Margin="0,0,0,24">
-                                    <TextBlock Text="Dive In" FontSize="20" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,16"/>
+                                    <TextBlock Text="Dive In" Style="{StaticResource SectionHeader}" />
                                     
-                                    <ListBox SelectedIndex="{Binding ViewModel.SelectedDiveInTabIndex}" Background="Transparent" BorderThickness="0">
-                                        <ListBox.ItemsPanel>
-                                            <ItemsPanelTemplate>
-                                                <StackPanel Orientation="Horizontal" />
-                                            </ItemsPanelTemplate>
-                                        </ListBox.ItemsPanel>
-                                        <ListBox.ItemContainerStyle>
-                                            <Style TargetType="ListBoxItem">
-                                                <Setter Property="Padding" Value="16,8" />
-                                                <Setter Property="Margin" Value="0,0,8,0" />
-                                                <Setter Property="Foreground" Value="#888" />
-                                                <Setter Property="Template">
-                                                    <Setter.Value>
-                                                        <ControlTemplate TargetType="ListBoxItem">
-                                                            <Border Background="{TemplateBinding Background}" CornerRadius="4">
-                                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}" />
-                                                            </Border>
-                                                        </ControlTemplate>
-                                                    </Setter.Value>
-                                                </Setter>
-                                                <Style.Triggers>
-                                                    <Trigger Property="IsSelected" Value="True">
-                                                        <Setter Property="Background" Value="#3E4451" />
-                                                        <Setter Property="Foreground" Value="White" />
-                                                    </Trigger>
-                                                    <MultiTrigger>
-                                                        <MultiTrigger.Conditions>
-                                                            <Condition Property="IsMouseOver" Value="True" />
-                                                            <Condition Property="IsSelected" Value="False" />
-                                                        </MultiTrigger.Conditions>
-                                                        <MultiTrigger.Setters>
-                                                            <Setter Property="Background" Value="#2A2E37" />
-                                                        </MultiTrigger.Setters>
-                                                    </MultiTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </ListBox.ItemContainerStyle>
-                                        <ListBoxItem Content="Dive In Mode" />
-                                        <ListBoxItem Content="Dive In Settings" />
-                                    </ListBox>
+                                    <TextBlock Text="Select apps that should hide the notch automatically when focused."
+                                               Style="{StaticResource SectionCaption}" />
                                 </StackPanel>
 
-                                <TabControl Grid.Row="1" SelectedIndex="{Binding ViewModel.SelectedDiveInTabIndex}" Background="Transparent" BorderThickness="0">
-                                    <TabControl.ItemContainerStyle>
-                                        <Style TargetType="TabItem">
-                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                        </Style>
-                                    </TabControl.ItemContainerStyle>
-                                    
-                                    <!-- Mode Tab -->
-                                    <TabItem>
-                                        <Grid>
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto" />
-                                                <RowDefinition Height="*" />
-                                            </Grid.RowDefinitions>
-                                            
-                                            <Grid Grid.Row="0" Margin="0,0,0,16">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="Auto" />
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock Grid.Column="0" Text="Select apps that will hide the notch automatically when focused." Foreground="#888" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,16,0" />
-                                                <ui:Button Grid.Column="1" Content="Refresh Apps" HorizontalAlignment="Right" Command="{Binding ViewModel.LoadInstalledAppsCommand}" VerticalAlignment="Center" />
-                                            </Grid>
-                                            
-                                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                                                <ItemsControl ItemsSource="{Binding ViewModel.DiveInApps}">
-                                                    <ItemsControl.ItemTemplate>
-                                                        <DataTemplate>
-                                                            <Border Background="#1AFFFFFF" CornerRadius="8" Padding="16" Margin="0,0,0,8">
-                                                                <Grid>
-                                                                    <Grid.ColumnDefinitions>
-                                                                        <ColumnDefinition Width="Auto" />
-                                                                        <ColumnDefinition Width="*" />
-                                                                        <ColumnDefinition Width="Auto" />
-                                                                    </Grid.ColumnDefinitions>
-                                                                    <Image Grid.Column="0" Source="{Binding IconImage}" Width="32" Height="32" Margin="0,0,16,0" VerticalAlignment="Center"/>
-                                                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                                        <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" Foreground="White" TextTrimming="CharacterEllipsis" />
-                                                                        <TextBlock Text="{Binding ExecutableName}" Foreground="#888" FontSize="11" Margin="0,2,0,0" />
-                                                                    </StackPanel>
-                                                                    <ui:ToggleSwitch Grid.Column="2" IsChecked="{Binding IsDiveInEnabled}" VerticalAlignment="Center" HorizontalAlignment="Right" />
-                                                                </Grid>
-                                                            </Border>
-                                                        </DataTemplate>
-                                                    </ItemsControl.ItemTemplate>
-                                                </ItemsControl>
-                                            </ScrollViewer>
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="*" />
+                                        </Grid.RowDefinitions>
+                                        
+                                        <Grid Grid.Row="0" Margin="0,0,0,16">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <ui:Button Grid.Column="1" Content="Refresh Apps" HorizontalAlignment="Right" Command="{Binding ViewModel.LoadInstalledAppsCommand}" VerticalAlignment="Center" />
                                         </Grid>
-                                    </TabItem>
-                                    
-                                    <!-- Settings Tab -->
-                                    <TabItem>
-                                        <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                            <Border Background="#1AFFFFFF" CornerRadius="8" Padding="24">
-                                                <TextBlock Text="Dive In settings coming soon..." Foreground="#888" HorizontalAlignment="Center" />
-                                            </Border>
+                                        
+                                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                            <ItemsControl ItemsSource="{Binding ViewModel.DiveInApps}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border Style="{StaticResource SettingsCard}" Padding="12,8" Margin="0,0,0,8">
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                    <ColumnDefinition Width="*" />
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                </Grid.ColumnDefinitions>
+                                                                <Image Grid.Column="0" Source="{Binding IconImage}" Width="32" Height="32" Margin="0,0,16,0" VerticalAlignment="Center"/>
+                                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" Foreground="White" TextTrimming="CharacterEllipsis" />
+                                                                    <TextBlock Text="{Binding ExecutableName}" Foreground="#888" FontSize="11" Margin="0,2,0,0" />
+                                                                </StackPanel>
+                                                                <ui:ToggleSwitch Grid.Column="2" IsChecked="{Binding IsDiveInEnabled}" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                                                            </Grid>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
                                         </ScrollViewer>
-                                    </TabItem>
-                                </TabControl>
+                                    </Grid>
                             </Grid>
                         </TabItem>
 
                         <!-- Danger Zone (Index 2) -->
                         <TabItem>
-                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,16,0">
                                 <StackPanel>
-                                    <TextBlock Text="Danger Zone" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,24" Foreground="#ff4d4d"/>
+                                    <TextBlock Text="Danger Zone" Style="{StaticResource SectionHeader}" Foreground="#FF4D4D" />
                                     
-                                    <Border Background="#1AFFFFFF" CornerRadius="8" Padding="16" Margin="0,0,0,16" HorizontalAlignment="Stretch">
+                                    <Border Style="{StaticResource SettingsCard}">
                                         <Grid HorizontalAlignment="Stretch">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*" />
@@ -622,7 +800,7 @@
                                         </Grid>
                                     </Border>
                                     
-                                    <Border Background="#1AFFFFFF" CornerRadius="8" Padding="16" Margin="0,0,0,16" HorizontalAlignment="Stretch">
+                                    <Border Style="{StaticResource SettingsCard}">
                                         <Grid HorizontalAlignment="Stretch">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*" />
@@ -644,9 +822,9 @@
 
             <!-- DEVELOPER TAB (Index 6) -->
             <TabItem>
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0">
-                    <StackPanel HorizontalAlignment="Center" Width="550">
-                        <TextBlock Text="About the Developer" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,24" HorizontalAlignment="Center" Foreground="White"/>
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0" Padding="0,0,16,0">
+                    <StackPanel HorizontalAlignment="Center" Width="620">
+                        <TextBlock Text="About the Developer" Style="{StaticResource SectionHeader}" />
                         
                         <Border Background="#21252B" CornerRadius="12" Padding="24" Margin="0,0,0,24" BorderBrush="#333" BorderThickness="1">
                             <Grid>
@@ -661,10 +839,26 @@
                                     <TextBlock Text="Midhlaj AM" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Foreground="White" />
                                     <TextBlock Text="Software Engineer" FontSize="14" Foreground="#ABB2BF" HorizontalAlignment="Center" Margin="0,4,0,16" />
                                     
-                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                        <ui:Button Content="LinkedIn" Icon="ContactLink24" Margin="0,0,8,0" Click="LinkedIn_Click" />
-                                        <ui:Button Content="GitHub" Icon="Code24" Click="GitHub_Click" />
-                                    </StackPanel>
+                                    <!-- WrapPanel, not StackPanel: side by side these two need more width
+                                         than this column has, and a horizontal StackPanel clips rather than
+                                         wraps. -->
+                                    <WrapPanel HorizontalAlignment="Center" ItemWidth="Auto">
+                                        <!-- Icon is an IconElement and does not convert from a string, so the
+                                             mark goes in Content. Fluent has no brand logos either, so both
+                                             marks are drawn as geometry (see UI/Controls/BrandIcons.xaml). -->
+                                        <ui:Button Margin="0,0,8,8" Click="LinkedIn_Click">
+                                            <StackPanel Orientation="Horizontal">
+                                                <Path Data="{StaticResource LinkedInGeometry}" Style="{StaticResource BrandIconStyle}" />
+                                                <TextBlock Text="LinkedIn" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </ui:Button>
+                                        <ui:Button Margin="0,0,0,8" Click="GitHub_Click">
+                                            <StackPanel Orientation="Horizontal">
+                                                <Path Data="{StaticResource GitHubGeometry}" Style="{StaticResource BrandIconStyle}" />
+                                                <TextBlock Text="GitHub" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </ui:Button>
+                                    </WrapPanel>
                                 </StackPanel>
                                 
                                 <!-- Right Column: About & Support -->
@@ -679,8 +873,16 @@
                                     <Button Click="OpenKofi_Click" Background="Transparent" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Left">
                                         <Button.Template>
                                             <ControlTemplate TargetType="Button">
-                                                <Border Background="Transparent" Padding="4" CornerRadius="8">
-                                                    <Image Source="https://storage.ko-fi.com/cdn/kofi6.png?v=6" Height="40" RenderOptions.BitmapScalingMode="HighQuality" />
+                                                <!-- Was an <Image> hotlinking storage.ko-fi.com. A desktop app
+                                                     should not need the network to draw its own settings page:
+                                                     offline or if the CDN changes, the button rendered blank. -->
+                                                <Border Background="#FF5E5B" Padding="14,8" CornerRadius="8">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <ui:SymbolIcon Symbol="DrinkCoffee24" FontSize="18" Foreground="White"
+                                                                       VerticalAlignment="Center" Margin="0,0,8,0" />
+                                                        <TextBlock Text="Support me on Ko-fi" Foreground="White"
+                                                                   FontWeight="SemiBold" VerticalAlignment="Center" />
+                                                    </StackPanel>
                                                 </Border>
                                             </ControlTemplate>
                                         </Button.Template>

@@ -1,0 +1,41 @@
+<UserControl x:Class="Project_Nook.UI.Widgets.SystemStatsWidgetControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="64" d:DesignWidth="64"
+             Foreground="White">
+
+    <UserControl.Resources>
+        <!-- Bar fill is a fraction of the 40px track, so the value maps straight to width. -->
+        <Style x:Key="StatBarTrackStyle" TargetType="Border">
+            <Setter Property="Width" Value="40" />
+            <Setter Property="Height" Value="3" />
+            <Setter Property="CornerRadius" Value="1.5" />
+            <Setter Property="Background" Value="#33FFFFFF" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+        </Style>
+    </UserControl.Resources>
+
+    <!-- No action, but hit-testable so the click is swallowed rather than collapsing the notch. -->
+    <Button Style="{StaticResource WidgetTileStyle}" Focusable="False" Cursor="Arrow"
+            ToolTip="{Binding MemoryDetail}">
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+            <TextBlock Text="CPU" Style="{StaticResource WidgetTileCaptionStyle}" FontSize="8" />
+            <TextBlock Text="{Binding CpuPercent, StringFormat={}{0}%, FallbackValue='0%'}"
+                       Style="{StaticResource WidgetTileValueStyle}" FontSize="15" />
+            <Border Style="{StaticResource StatBarTrackStyle}" Margin="0,2,0,5">
+                <Border Background="#4CAF50" CornerRadius="1.5" HorizontalAlignment="Left"
+                        Width="{Binding CpuPercent, Converter={StaticResource PercentToBarWidthConverter}}" />
+            </Border>
+
+            <TextBlock Text="{Binding MemoryPercent, StringFormat=RAM {0}%, FallbackValue='RAM 0%'}"
+                       Style="{StaticResource WidgetTileCaptionStyle}" FontSize="8" />
+            <Border Style="{StaticResource StatBarTrackStyle}" Margin="0,2,0,0">
+                <Border Background="#2196F3" CornerRadius="1.5" HorizontalAlignment="Left"
+                        Width="{Binding MemoryPercent, Converter={StaticResource PercentToBarWidthConverter}}" />
+            </Border>
+        </StackPanel>
+    </Button>
+</UserControl>

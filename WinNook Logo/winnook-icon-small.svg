@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="WinNook">
+  <title>WinNook (small sizes, 32px and below)</title>
+  <rect width="256" height="256" rx="52" fill="#0078D4"/>
+  <rect x="34" y="34" width="86" height="62" rx="14" fill="#FFFFFF"/>
+  <rect x="136" y="34" width="86" height="62" rx="14" fill="#FFFFFF"/>
+  <rect x="34" y="160" width="120" height="62" rx="14" fill="#FFFFFF"/>
+  <rect x="170" y="160" width="52" height="62" rx="14" fill="#9EDBFF"/>
+  <rect x="20" y="106" width="216" height="44" rx="22" fill="#16181D"/>
+</svg>

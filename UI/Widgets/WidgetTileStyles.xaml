@@ -1,0 +1,74 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:converters="clr-namespace:Project_Nook.Converters">
+
+    <converters:PercentToBarWidthConverter x:Key="PercentToBarWidthConverter" />
+    <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+
+    <!--
+        The shared 64x64 squircle every tile widget is built on. Same fill and corner radius as the Shelf
+        items and the Calendar tile, so the rail reads as one set of objects.
+
+        This is a Button rather than a Border on purpose: ButtonBase marks MouseLeftButtonDown as handled,
+        which stops the click bubbling up to NotchBorder_MouseLeftButtonDown and collapsing the notch out
+        from under the widget the user just pressed.
+    -->
+    <Style x:Key="WidgetTileStyle" TargetType="Button">
+        <Setter Property="Width" Value="64" />
+        <Setter Property="Height" Value="64" />
+        <Setter Property="Background" Value="#4DC4C4C4" />
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Border x:Name="TileSurface"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="16" />
+                        <!-- Separate overlay so hover and press tint the tile without clobbering a widget
+                             that paints its own background (album art, an app icon). -->
+                        <Border x:Name="TileOverlay"
+                                Background="Transparent"
+                                CornerRadius="16" />
+                        <ContentPresenter Margin="{TemplateBinding Padding}"
+                                          HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="TileOverlay" Property="Background" Value="#20FFFFFF" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="TileOverlay" Property="Background" Value="#10FFFFFF" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.4" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Small caption under a tile's main value, e.g. the month above a date. -->
+    <Style x:Key="WidgetTileCaptionStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="10" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="#AAA" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+    </Style>
+
+    <!-- The one number or word a tile exists to show. -->
+    <Style x:Key="WidgetTileValueStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+    </Style>
+
+</ResourceDictionary>

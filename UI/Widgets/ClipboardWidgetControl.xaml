@@ -1,0 +1,20 @@
+<UserControl x:Class="Project_Nook.UI.Widgets.ClipboardWidgetControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             mc:Ignorable="d"
+             d:DesignHeight="64" d:DesignWidth="64"
+             Foreground="White">
+
+    <Button Style="{StaticResource WidgetTileStyle}" Focusable="False"
+            Command="{Binding OpenPageCommand}"
+            ToolTip="Clipboard history">
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+            <ui:SymbolIcon Symbol="ClipboardPaste24" FontSize="20" Foreground="White"
+                           HorizontalAlignment="Center" Margin="0,0,0,3" />
+            <TextBlock Text="{Binding Count}" Style="{StaticResource WidgetTileValueStyle}" FontSize="13" />
+        </StackPanel>
+    </Button>
+</UserControl>

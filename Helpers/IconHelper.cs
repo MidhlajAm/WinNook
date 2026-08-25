@@ -1,6 +1,5 @@
 using System;
 using System.Drawing;
-using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -10,9 +9,6 @@ namespace Project_Nook.Helpers
 {
     public static class IconHelper
     {
-        [DllImport("user32.dll", SetLastError = true)]
-        private static extern bool DestroyIcon(IntPtr hIcon);
-
         public static ImageSource? GetIcon(string filePath)
         {
             try

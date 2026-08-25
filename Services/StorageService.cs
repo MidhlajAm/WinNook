@@ -8,6 +8,8 @@ namespace Project_Nook.Services
     public class StorageService : IStorageService
     {
         private readonly string _storageDir;
+        private readonly object _sizeGate = new();
+        private long? _cachedUsedBytes;
 
         public StorageService()
         {
@@ -36,7 +38,8 @@ namespace Project_Nook.Services
             }
             
             await Task.Run(() => File.Copy(sourcePath, destPath));
-            
+
+            InvalidateSizeCache();
             return destPath;
         }
 
@@ -44,6 +47,8 @@ namespace Project_Nook.Services
         {
             var destPath = Path.Combine(_storageDir, $"{Guid.NewGuid()}_{hintName}.txt");
             await File.WriteAllTextAsync(destPath, text);
+
+            InvalidateSizeCache();
             return destPath;
         }
 
@@ -51,24 +56,60 @@ namespace Project_Nook.Services
         {
             if (File.Exists(storedPath))
             {
-                try { File.Delete(storedPath); } catch { }
+                try { File.Delete(storedPath); InvalidateSizeCache(); } catch { }
             }
+        }
+
+        /// <summary>
+        /// Measures the managed storage folder. Cached because this is checked on every drop, and
+        /// invalidated whenever we add or remove a file ourselves.
+        /// </summary>
+        public long GetUsedBytes()
+        {
+            lock (_sizeGate)
+            {
+                if (_cachedUsedBytes.HasValue) return _cachedUsedBytes.Value;
+
+                long total = 0;
+                try
+                {
+                    foreach (var file in Directory.EnumerateFiles(_storageDir, "*", SearchOption.AllDirectories))
+                    {
+                        try { total += new FileInfo(file).Length; } catch { }
+                    }
+                }
+                catch { }
+
+                _cachedUsedBytes = total;
+                return total;
+            }
+        }
+
+        private void InvalidateSizeCache()
+        {
+            lock (_sizeGate) _cachedUsedBytes = null;
         }
 
         public void OpenFile(string storedPath)
         {
-            if (File.Exists(storedPath))
+            // Folder shelf entries point at a real directory, which shell-executes into Explorer.
+            if (!File.Exists(storedPath) && !Directory.Exists(storedPath)) return;
+
+            try
             {
                 Process.Start(new ProcessStartInfo { FileName = storedPath, UseShellExecute = true });
             }
+            catch { }
         }
 
         public void RevealInExplorer(string storedPath)
         {
-            if (File.Exists(storedPath))
+            try
             {
-                Process.Start("explorer.exe", $"/select,\"{storedPath}\"");
+                if (File.Exists(storedPath)) Process.Start("explorer.exe", $"/select,\"{storedPath}\"");
+                else if (Directory.Exists(storedPath)) Process.Start("explorer.exe", $"\"{storedPath}\"");
             }
+            catch { }
         }
     }
 }
