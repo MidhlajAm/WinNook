@@ -169,7 +169,7 @@ dotnet run --project "Project Nook.csproj"
 ```
 
 > Pass the project path explicitly. The solution pins concrete platforms and writes to a
-> different output folder, which makes it easy to run a stale binary by mistake.
+different output folder, which makes it easy to run a stale binary by mistake.
 
 To produce an installer, publish self-contained and compile the
 [Inno Setup](https://jrsoftware.org/isdl.php) script:
@@ -289,4 +289,6 @@ Apple's *Designing Fluid Interfaces*. Not affiliated with or endorsed by Apple.
 
 ## License
 
-Not yet licensed. Until a license is added, all rights are reserved.
+WinNook is licensed under the **GNU General Public License v3.0 or later**.
+
+See the [LICENSE](LICENSE) file for the full license text.
